@@ -1,7 +1,7 @@
 
   # Autopilot Dataset Explorer Dashboard
 
-  This is a code bundle for Autopilot Dataset Explorer Dashboard. The original project is available at https://www.figma.com/design/BAtV0sk3vB8kUd5NLfUBoL/Autopilot-Dataset-Explorer-Dashboard.
+  This is a Autopilot Dataset Explorer Dashboard. ReadME will be updated soon!
 
   ## Running the code
 
