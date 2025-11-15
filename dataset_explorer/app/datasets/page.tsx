@@ -1,24 +1,33 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabaseClient";
 import { useUser } from "../../components/AuthProvider";
 import { Button } from "../../components/ui/button";
+import {
+  fetchDatasetsAction,
+  fetchImagesForDatasetAction,
+  createDatasetAction,
+  uploadImagesAction,
+  deleteImageAction,
+  type Dataset,
+  type ImageThumbnail,
+} from "./actions";
 
 export default function DatasetsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
-  const [datasets, setDatasets] = useState<Array<{ id: string; name: string; created_at?: string }>>([]);
+  const [isPending, startTransition] = useTransition();
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [selected, setSelected] = useState<string>(""); // selected dataset id
+  const [selected, setSelected] = useState<string>("");
   const [newName, setNewName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [imagesPage, setImagesPage] = useState(1);
   const [imagesPerPage] = useState(12);
   const [imagesTotal, setImagesTotal] = useState(0);
-  const [thumbnails, setThumbnails] = useState<Array<{ id: string; url: string; storage_path: string }>>([]);
+  const [thumbnails, setThumbnails] = useState<ImageThumbnail[]>([]);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -29,154 +38,82 @@ export default function DatasetsPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetchDatasets();
+    loadDatasets();
   }, [user]);
 
   useEffect(() => {
-    // whenever selected dataset or page changes, load thumbnails
     if (!selected) {
       setThumbnails([]);
       setImagesTotal(0);
       return;
     }
-    fetchImagesForDataset(selected, imagesPage, imagesPerPage);
+    loadImagesForDataset(selected, imagesPage, imagesPerPage);
   }, [selected, imagesPage, imagesPerPage]);
 
-  const fetchDatasets = async () => {
+  const loadDatasets = () => {
+    if (!user) return;
     setMessage(null);
-    try {
-      // Fetch datasets from DB table 'datasets' for this user
-      const { data: dsData, error: dsError } = await supabase
-        .from('datasets')
-        .select('id,name,created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (dsError) throw dsError;
-
-      const countsMap: Record<string, number> = {};
-      const dsList = (dsData ?? []).map((d: any) => ({ id: d.id, name: d.name, created_at: d.created_at }));
-
-      // For each dataset, count images in images table
-      for (const d of dsList) {
-        try {
-          const { count, error: countErr } = await supabase
-            .from('images')
-            .select('id', { count: 'exact', head: true })
-            .eq('dataset_id', d.id);
-          if (countErr) {
-            countsMap[d.id] = 0;
-          } else {
-            countsMap[d.id] = count ?? 0;
-          }
-        } catch (e) {
-          countsMap[d.id] = 0;
+    startTransition(async () => {
+      const result = await fetchDatasetsAction(user.id);
+      if (result.error) {
+        setMessage(`Error: ${result.error}`);
+        setDatasets([]);
+        setCounts({});
+      } else {
+        setDatasets(result.datasets);
+        setCounts(result.counts);
+        if (!selected && result.datasets.length > 0) {
+          setSelected(result.datasets[0].id);
         }
       }
-
-      setDatasets(dsList);
-      setCounts(countsMap);
-      if (!selected && dsList.length > 0) setSelected(dsList[0].id);
-    } catch (err: any) {
-      console.error(err);
-      setMessage('Error fetching datasets: ' + (err?.message ?? String(err)));
-    }
+    });
   };
 
-  // Fetch images for a given dataset with pagination
-  const fetchImagesForDataset = async (datasetId: string, page: number, perPage: number) => {
-    try {
-      setThumbnails([]);
-      const from = (page - 1) * perPage;
-      const to = from + perPage - 1;
-      const { data, error, count } = await supabase
-        .from('images')
-        .select('id,storage_path,created_at', { count: 'exact' })
-        .eq('dataset_id', datasetId)
-        .order('created_at', { ascending: false })
-        .range(from, to as number);
-      if (error) throw error;
-
-      setImagesTotal(count ?? 0);
-
-      if (!data || data.length === 0) {
+  const loadImagesForDataset = (datasetId: string, page: number, perPage: number) => {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await fetchImagesForDatasetAction(datasetId, page, perPage);
+      if (result.error) {
+        setMessage(`Error loading images: ${result.error}`);
         setThumbnails([]);
-        return;
+        setImagesTotal(0);
+      } else {
+        setThumbnails(result.thumbnails);
+        setImagesTotal(result.total);
       }
-
-      // For each image, create a signed URL (short-lived) for the thumbnail display
-      const thumbs: Array<{ id: string; url: string; storage_path: string }> = [];
-      for (const img of data) {
-        try {
-          // createSignedUrl returns data with signedUrl or signedURL depending on client version
-          const path = img.storage_path;
-          const signed = await supabase.storage.from('datasets').createSignedUrl(path, 60);
-          let url = '';
-          if ((signed as any).data?.signedUrl) url = (signed as any).data.signedUrl;
-          else if ((signed as any).data?.signedURL) url = (signed as any).data.signedURL;
-          else if ((signed as any).publicURL) url = (signed as any).publicURL;
-          else if ((signed as any).data?.publicUrl) url = (signed as any).data.publicUrl;
-          thumbs.push({ id: img.id, url, storage_path: path });
-        } catch (e) {
-          thumbs.push({ id: img.id, url: '', storage_path: img.storage_path });
-        }
-      }
-
-      setThumbnails(thumbs);
-    } catch (err: any) {
-      console.error('Error fetching images for dataset', err);
-      setMessage('Error loading images: ' + (err?.message ?? String(err)));
-    }
+    });
   };
 
-  const deleteImage = async (imageId: string, storagePath: string) => {
+  const handleDeleteImage = (imageId: string, storagePath: string) => {
     if (!confirm('Delete this image? This will remove it from the dataset.')) return;
     setDeletingIds(prev => [...prev, imageId]);
     setMessage(null);
-    try {
-      // Delete DB record
-      const { error: delErr } = await supabase.from('images').delete().eq('id', imageId);
-      if (delErr) throw delErr;
-
-      // Try to remove from storage as well
-      try {
-        const { error: rmErr } = await supabase.storage.from('datasets').remove([storagePath]);
-        if (rmErr) {
-          console.warn('Failed to remove storage object:', rmErr.message);
-        }
-      } catch (e) {
-        console.warn('Storage remove error', e);
+    startTransition(async () => {
+      const result = await deleteImageAction(imageId, storagePath);
+      if (result.error) {
+        setMessage(`Delete error: ${result.error}`);
+      } else {
+        setMessage('Image deleted');
+        await loadImagesForDataset(selected, imagesPage, imagesPerPage);
+        await loadDatasets();
       }
-
-      setMessage('Image deleted');
-      // Refresh images and dataset counts
-      await fetchImagesForDataset(selected, imagesPage, imagesPerPage);
-      await fetchDatasets();
-    } catch (err: any) {
-      console.error('Error deleting image', err);
-      setMessage('Delete error: ' + (err?.message ?? String(err)));
-    } finally {
       setDeletingIds(prev => prev.filter(id => id !== imageId));
-    }
+    });
   };
 
-  const createDataset = async () => {
+  const handleCreateDataset = () => {
     if (!newName || !user) return;
     setMessage(null);
-    try {
-      // Insert dataset record into DB
-      const { data: insertData, error: insertError } = await supabase
-        .from('datasets')
-        .insert([{ name: newName, user_id: user.id }])
-        .select()
-        .single();
-      if (insertError) throw insertError;
-      setNewName("");
-      await fetchDatasets();
-      setMessage('Dataset created');
-    } catch (err: any) {
-      console.error(err);
-      setMessage('Error creating dataset: ' + (err?.message ?? String(err)));
-    }
+    startTransition(async () => {
+      const result = await createDatasetAction(newName, user.id);
+      if (result.error) {
+        setMessage(`Error: ${result.error}`);
+      } else {
+        setNewName("");
+        setMessage('Dataset created');
+        await loadDatasets();
+      }
+    });
   };
 
   const handleFiles = async (files: FileList | null) => {
@@ -184,49 +121,19 @@ export default function DatasetsPage() {
     setUploading(true);
     setMessage(null);
     try {
-      // Find selected dataset
       const ds = datasets.find(d => d.id === selected);
       if (!ds) throw new Error('Selected dataset not found');
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const storagePath = `${user.id}/${ds.name}/${file.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage.from('datasets').upload(storagePath, file, { upsert: true });
-        if (uploadError) throw uploadError;
-
-        // Try to get image dimensions
-        const getImageSize = (f: File) => new Promise<{ width: number; height: number }>((resolve) => {
-          const url = URL.createObjectURL(f);
-          const img = new Image();
-          img.onload = () => {
-            const w = img.naturalWidth;
-            const h = img.naturalHeight;
-            URL.revokeObjectURL(url);
-            resolve({ width: w, height: h });
-          };
-          img.onerror = () => {
-            URL.revokeObjectURL(url);
-            resolve({ width: 0, height: 0 });
-          };
-          img.src = url;
-        });
-
-        const { width, height } = await getImageSize(file);
-
-        // Insert image record in images table (schema: dataset_id, storage_path, width, height)
-        const imageRecord = {
-          dataset_id: ds.id,
-          storage_path: storagePath,
-          width: width || null,
-          height: height || null
-        };
-        const { error: imgErr } = await supabase.from('images').insert([imageRecord]);
-        if (imgErr) {
-          console.warn('Uploaded to storage but failed to insert DB record', imgErr.message);
-        }
+      const fileArray = Array.from(files);
+      const result = await uploadImagesAction(selected, ds.name, user.id, fileArray);
+      if (result.error) {
+        setMessage(`Upload error: ${result.error}`);
+      } else {
+        setMessage('Upload complete');
+        await loadDatasets();
+        await loadImagesForDataset(selected, 1, imagesPerPage);
+        setImagesPage(1);
       }
-      setMessage('Upload complete');
-      await fetchDatasets();
     } catch (err: any) {
       console.error(err);
       setMessage('Upload error: ' + (err?.message ?? String(err)));
@@ -259,7 +166,7 @@ export default function DatasetsPage() {
           <div className="text-sm text-[#A3A3A3] mb-2">Create a new dataset</div>
           <div className="flex gap-2">
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="dataset-name" className="bg-transparent border border-[#1F1F1F] px-3 py-2 rounded text-white" />
-            <Button onClick={createDataset} className="bg-[#E82127]">Create</Button>
+            <Button onClick={handleCreateDataset} className="bg-[#E82127]">Create</Button>
           </div>
         </div>
 
@@ -285,7 +192,7 @@ export default function DatasetsPage() {
                 {thumbnails.map(t => (
                   <div key={t.id} className="relative bg-[#0B0B0B] border border-[#1F1F1F] rounded overflow-hidden">
                     <button
-                      onClick={() => deleteImage(t.id, t.storage_path)}
+                      onClick={() => handleDeleteImage(t.id, t.storage_path)}
                       disabled={deletingIds.includes(t.id)}
                       className="absolute top-1 right-1 z-10 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
                       title="Delete image"
