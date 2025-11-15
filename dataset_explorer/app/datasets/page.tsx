@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../components/AuthProvider";
 import { Button } from "../../components/ui/button";
@@ -30,6 +30,9 @@ export default function DatasetsPage() {
   const [imagesTotal, setImagesTotal] = useState(0);
   const [thumbnails, setThumbnails] = useState<ImageThumbnail[]>([]);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  // Cache thumbnails and totals per dataset to avoid refetch/render delay when switching
+  const thumbnailsCache = useRef<Record<string, ImageThumbnail[]>>({});
+  const totalsCache = useRef<Record<string, number>>({});
 
   useEffect(() => {
     if (!loading && !user) {
@@ -72,6 +75,32 @@ export default function DatasetsPage() {
 
   const loadImagesForDataset = (datasetId: string, page: number, perPage: number) => {
     setMessage(null);
+
+    // If we have a cached first-page, show it immediately for snappy UI
+    if (page === 1 && thumbnailsCache.current[datasetId]) {
+      setThumbnails(thumbnailsCache.current[datasetId]);
+      setImagesTotal(totalsCache.current[datasetId] ?? 0);
+
+      // Refresh in background and update cache/state if different
+      startTransition(async () => {
+        const result = await fetchImagesForDatasetAction(datasetId, page, perPage);
+        if (!result.error) {
+          // Update cache and state only if data changed
+          const cached = thumbnailsCache.current[datasetId] || [];
+          const same = cached.length === result.thumbnails.length && cached.every((c, i) => c.id === result.thumbnails[i]?.id);
+          thumbnailsCache.current[datasetId] = result.thumbnails;
+          totalsCache.current[datasetId] = result.total;
+          if (!same) {
+            setThumbnails(result.thumbnails);
+          }
+          setImagesTotal(result.total);
+        }
+      });
+
+      return;
+    }
+
+    setThumbnails([]);
     startTransition(async () => {
       const result = await fetchImagesForDatasetAction(datasetId, page, perPage);
       if (result.error) {
@@ -81,6 +110,11 @@ export default function DatasetsPage() {
       } else {
         setThumbnails(result.thumbnails);
         setImagesTotal(result.total);
+        // Cache first page for snappy switching
+        if (page === 1) {
+          thumbnailsCache.current[datasetId] = result.thumbnails;
+          totalsCache.current[datasetId] = result.total;
+        }
       }
     });
   };

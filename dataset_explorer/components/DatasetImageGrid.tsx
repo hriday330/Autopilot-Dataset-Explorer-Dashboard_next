@@ -20,7 +20,7 @@ type Props = {
   onNextPage: () => void;
 };
 
-export default function DatasetImageGrid({
+function DatasetImageGrid({
   thumbnails,
   deletingIds,
   imagesPage,
@@ -88,3 +88,7 @@ export default function DatasetImageGrid({
     </div>
   );
 }
+
+const MemoizedDatasetImageGrid = React.memo(DatasetImageGrid);
+MemoizedDatasetImageGrid.displayName = 'DatasetImageGrid';
+export default MemoizedDatasetImageGrid;
