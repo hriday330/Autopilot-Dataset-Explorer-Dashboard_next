@@ -35,6 +35,28 @@ export default function DatasetsPage() {
   const thumbnailsCache = useRef<Record<string, ImageThumbnail[]>>({});
   const totalsCache = useRef<Record<string, number>>({});
 
+  // Load cache from localStorage on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("datasetImageCache");
+      if (cached) {
+        const { thumbnails, totals, timestamp } = JSON.parse(cached);
+        const now = Date.now();
+        const oneHourMs = 60 * 60 * 1000;
+        // Only use cache if less than 1 hour old
+        if (now - timestamp < oneHourMs) {
+          thumbnailsCache.current = thumbnails || {};
+          totalsCache.current = totals || {};
+        } else {
+          // Cache expired, clear it
+          localStorage.removeItem("datasetImageCache");
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load image cache from localStorage", e);
+    }
+  }, []);
+
   // Redirect to login if not logged in
   useEffect(() => {
     if (!loading && !user) {
@@ -103,6 +125,16 @@ export default function DatasetsPage() {
         if (page === 1) {
           thumbnailsCache.current[datasetId] = result.thumbnails;
           totalsCache.current[datasetId] = result.total;
+          // Persist to localStorage with timestamp
+          try {
+            localStorage.setItem("datasetImageCache", JSON.stringify({
+              thumbnails: thumbnailsCache.current,
+              totals: totalsCache.current,
+              timestamp: Date.now(),
+            }));
+          } catch (e) {
+            console.warn("Failed to save image cache to localStorage", e);
+          }
         }
       }
     });
@@ -119,7 +151,22 @@ export default function DatasetsPage() {
         setMessage(`Delete error: ${result.error}`);
       } else {
         setMessage('Image deleted');
-        await loadImagesForDataset(selected, imagesPage, imagesPerPage);
+        // Optimistic update: remove from current grid immediately
+        setThumbnails(prev => prev.filter(t => t.id !== imageId));
+        setImagesTotal(prev => Math.max(0, prev - 1));
+        // Invalidate cache for this dataset
+        delete thumbnailsCache.current[selected];
+        delete totalsCache.current[selected];
+        try {
+          localStorage.setItem("datasetImageCache", JSON.stringify({
+            thumbnails: thumbnailsCache.current,
+            totals: totalsCache.current,
+            timestamp: Date.now(),
+          }));
+        } catch (e) {
+          console.warn("Failed to update cache after delete", e);
+        }
+        // Refresh counts in background
         await loadDatasets();
       }
       setDeletingIds(prev => prev.filter(id => id !== imageId));
@@ -160,9 +207,24 @@ export default function DatasetsPage() {
         setMessage(`Upload error: ${result.error}`);
       } else {
         setMessage('Upload complete');
+        // Optimistic update: prepend new images to grid
+        if (result.thumbnails && result.thumbnails.length > 0) {
+          setThumbnails(prev => [...result.thumbnails, ...prev]);
+          setImagesTotal(prev => prev + result.thumbnails.length);
+          // Invalidate cache since new images were added
+          delete thumbnailsCache.current[selected];
+          delete totalsCache.current[selected];
+          try {
+            localStorage.setItem("datasetImageCache", JSON.stringify({
+              thumbnails: thumbnailsCache.current,
+              totals: totalsCache.current,
+              timestamp: Date.now(),
+            }));
+          } catch (e) {
+            console.warn("Failed to update cache after upload", e);
+          }
+        }
         await loadDatasets();
-        await loadImagesForDataset(selected, 1, imagesPerPage);
-        setImagesPage(1);
       }
     } catch (err: any) {
       console.error(err);

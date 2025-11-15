@@ -133,7 +133,8 @@ export async function uploadImagesAction(
   try {
     const datasetId = formData.get("datasetId") as string;
     const files = formData.getAll("files") as File[];
-    const uploadedCount = files.length;
+    const uploadedImages: ImageThumbnail[] = [];
+
     for (const file of files) {
       const storagePath = `${userId}/${datasetName}/${file.name}`;
 
@@ -172,24 +173,37 @@ export async function uploadImagesAction(
       }
 
       // Insert image record
-      const { error: imgErr } = await supabaseServer.from('images').insert([
+      const { data: imgData, error: imgErr } = await supabaseServer.from('images').insert([
         {
           dataset_id: datasetId,
           storage_path: storagePath,
           width: width || null,
           height: height || null,
         },
-      ]);
+      ]).select().single();
 
       if (imgErr) {
         console.warn('Uploaded to storage but failed to insert DB record', imgErr.message);
+      } else if (imgData) {
+        // Generate signed URL for new image
+        try {
+          const signed = await supabaseServer.storage.from('datasets').createSignedUrl(storagePath, 3600);
+          let signedUrl = '';
+          if ((signed as any).data?.signedUrl) signedUrl = (signed as any).data.signedUrl;
+          else if ((signed as any).data?.signedURL) signedUrl = (signed as any).data.signedURL;
+          else if ((signed as any).publicURL) signedUrl = (signed as any).publicURL;
+          else if ((signed as any).data?.publicUrl) signedUrl = (signed as any).data.publicUrl;
+          uploadedImages.push({ id: imgData.id, url: signedUrl, storage_path: storagePath });
+        } catch (e) {
+          uploadedImages.push({ id: imgData.id, url: '', storage_path: storagePath });
+        }
       }
     }
 
     revalidatePath("/datasets");
-    return { success: true };
+    return { success: true, thumbnails: uploadedImages };
   } catch (err: any) {
-    return { success: false, error: err?.message ?? String(err) };
+    return { success: false, error: err?.message ?? String(err), thumbnails: [] };
   }
 }
 
