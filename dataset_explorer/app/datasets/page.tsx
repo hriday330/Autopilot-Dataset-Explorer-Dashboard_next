@@ -1,39 +1,62 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../components/AuthProvider";
 import { Button } from "../../components/ui/button";
-import {
-  fetchDatasetsAction,
-  fetchImagesForDatasetAction,
-  createDatasetAction,
-  uploadImagesAction,
-  deleteImageAction,
-  type Dataset,
-  type ImageThumbnail,
-} from "./actions";
 import DatasetImageGrid from "../../components/DatasetImageGrid";
-import { useDatasetImageCache } from "./useDatasetImageCache";
+import { useDatasets } from "./useDatasets";
+import { useLoadImages } from "./useLoadImages";
+import { useUpdateImages } from "./useUpdateImages";
 
 export default function DatasetsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
-  const [isPending, startTransition] = useTransition();
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [selected, setSelected] = useState<string>("");
-  const [newName, setNewName] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [imagesPage, setImagesPage] = useState(1);
-  const [imagesPerPage] = useState(12);
-  const [imagesTotal, setImagesTotal] = useState(0);
-  const [thumbnails, setThumbnails] = useState<ImageThumbnail[]>([]);
-  const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [selected, setSelected] = React.useState<string>("");
+  const [newName, setNewName] = React.useState("");
+  const [imagesPage, setImagesPage] = React.useState(1);
+  const [imagesPerPage] = React.useState(12);
 
-  // Cache hook
-  const cache = useDatasetImageCache();
+  // Dataset management
+  const {
+    datasets,
+    counts,
+    loadDatasets,
+    setMessage: setDatasetMessage,
+    message: datasetMessage,
+  } = useDatasets();
+
+  // Image loading with caching
+  const {
+    thumbnails,
+    setThumbnails,
+    imagesTotal,
+    setImagesTotal,
+    loadImagesForDataset,
+    setMessage: setImageMessage,
+    message: imageMessage,
+    cache,
+  } = useLoadImages();
+
+  // Image operations (upload, delete, create)
+  const {
+    uploading,
+    deletingIds,
+    handleDeleteImage: deleteImageHandler,
+    handleCreateDataset: createDatasetHandler,
+    handleUploadFiles,
+    setMessage: setOpMessage,
+    message: opMessage,
+  } = useUpdateImages({
+    onDeleteComplete: () => {
+      loadDatasets(user?.id || "", selected);
+    },
+    onUploadComplete: () => {
+      loadDatasets(user?.id || "", selected);
+    },
+  });
+
+  const message = datasetMessage || imageMessage || opMessage;
 
   // Redirect to login if not logged in
   useEffect(() => {
@@ -42,11 +65,13 @@ export default function DatasetsPage() {
     }
   }, [user, loading, router]);
 
+  // Load datasets on login
   useEffect(() => {
     if (!user) return;
-    loadDatasets();
+    loadDatasets(user.id, selected, setSelected);
   }, [user]);
 
+  // Load images whenever dataset or page changes
   useEffect(() => {
     if (!selected) {
       setThumbnails([]);
@@ -56,125 +81,30 @@ export default function DatasetsPage() {
     loadImagesForDataset(selected, imagesPage, imagesPerPage);
   }, [selected, imagesPage, imagesPerPage]);
 
-  const loadDatasets = () => {
-    if (!user) return;
-    setMessage(null);
-    startTransition(async () => {
-      const result = await fetchDatasetsAction(user.id);
-      if (result.error) {
-        setMessage(`Error: ${result.error}`);
-        setDatasets([]);
-        setCounts({});
-      } else {
-        setDatasets(result.datasets);
-        setCounts(result.counts);
-        if (!selected && result.datasets.length > 0) {
-          setSelected(result.datasets[0].id);
-        }
-      }
-    });
-  };
-
-  const loadImagesForDataset = (datasetId: string, page: number, perPage: number) => {
-    setMessage(null);
-
-    // Show cached first page immediately when switching datasets
-    const cached = cache.getCachedThumbnails(datasetId);
-    if (page === 1 && cached) {
-      setThumbnails(cached);
-      setImagesTotal(cache.getCachedTotal(datasetId) ?? 0);
-      return;
-    }
-
-    setThumbnails([]);
-    startTransition(async () => {
-      const result = await fetchImagesForDatasetAction(datasetId, page, perPage);
-      if (result.error) {
-        setMessage(`Error loading images: ${result.error}`);
-        setThumbnails([]);
-        setImagesTotal(0);
-      } else {
-        setThumbnails(result.thumbnails);
-        setImagesTotal(result.total);
-        // Cache first page only
-        if (page === 1) {
-          cache.setCached(datasetId, result.thumbnails, result.total);
-        }
-      }
-    });
-  };
-
   const handleDeleteImage = (imageId: string, storagePath: string) => {
-    if (!confirm('Delete this image? This will remove it from the dataset.')) return;
-    setDeletingIds(prev => [...prev, imageId]);
-    setMessage(null);
-    startTransition(async () => {
-      const result = await deleteImageAction(imageId, storagePath);
-      if (result.error) {
-        setMessage(`Delete error: ${result.error}`);
-      } else {
-        setMessage('Image deleted');
-        // Optimistic update: remove from current grid immediately
-        setThumbnails(prev => prev.filter(t => t.id !== imageId));
-        setImagesTotal(prev => Math.max(0, prev - 1));
-        // Invalidate cache for this dataset
-        cache.invalidate(selected);
-        // Refresh counts in background
-        await loadDatasets();
-      }
-      setDeletingIds(prev => prev.filter(id => id !== imageId));
+    deleteImageHandler(imageId, storagePath, () => {
+      setThumbnails(prev => prev.filter(t => t.id !== imageId));
+      setImagesTotal(prev => Math.max(0, prev - 1));
+      cache.invalidate(selected);
     });
   };
 
-  
   const handleCreateDataset = () => {
     if (!newName || !user) return;
-    setMessage(null);
-    startTransition(async () => {
-      const result = await createDatasetAction(newName, user.id);
-      if (result.error) {
-        setMessage(`Error: ${result.error}`);
-      } else {
-        setNewName("");
-        setMessage('Dataset created');
-        await loadDatasets();
-      }
-    });
+    createDatasetHandler(newName, user.id);
+    setNewName("");
   };
 
-  
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user || !selected) return;
-    setUploading(true);
-    setMessage(null);
-    try {
-      const ds = datasets.find(d => d.id === selected);
-      if (!ds) throw new Error('Selected dataset not found');
-      const fileArray = Array.from(files);
-      const fd = new FormData();
-      fileArray.forEach(f => fd.append("files", f));
-      fd.append("datasetId", ds.id);
+    const ds = datasets.find(d => d.id === selected);
+    if (!ds) return;
 
-      const result = await uploadImagesAction(selected, ds.name, user.id, fd);
-      if (result.error) {
-        setMessage(`Upload error: ${result.error}`);
-      } else {
-        setMessage('Upload complete');
-        // Optimistic update: prepend new images to grid
-        if (result.thumbnails && result.thumbnails.length > 0) {
-          setThumbnails(prev => [...result.thumbnails, ...prev]);
-          setImagesTotal(prev => prev + result.thumbnails.length);
-          // Invalidate cache since new images were added
-          cache.invalidate(selected);
-        }
-        await loadDatasets();
-      }
-    } catch (err: any) {
-      console.error(err);
-      setMessage('Upload error: ' + (err?.message ?? String(err)));
-    } finally {
-      setUploading(false);
-    }
+    await handleUploadFiles(files, selected, ds.name, user.id, (newThumbnails) => {
+      setThumbnails(prev => [...newThumbnails, ...prev]);
+      setImagesTotal(prev => prev + newThumbnails.length);
+      cache.invalidate(selected);
+    });
   };
 
   return (
@@ -183,7 +113,7 @@ export default function DatasetsPage() {
         <h2 className="text-2xl text-white mb-4">Your datasets</h2>
         {message && <div className="mb-4 p-2 bg-[#222] text-[#E5E5E5]">{message}</div>}
 
-        
+        {/* Dataset Selector */}
         <div className="mb-6">
           <div className="text-sm text-[#A3A3A3] mb-2">Select an existing dataset</div>
           <div className="space-y-2">
@@ -198,7 +128,7 @@ export default function DatasetsPage() {
           </div>
         </div>
 
-        
+        {/* Create Dataset */}
         <div className="mb-6">
           <div className="text-sm text-[#A3A3A3] mb-2">Create a new dataset</div>
           <div className="flex gap-2">
@@ -212,7 +142,7 @@ export default function DatasetsPage() {
           </div>
         </div>
 
-        
+        {/* Upload Files */}
         <div className="mb-6">
           <div className="text-sm text-[#A3A3A3] mb-2">Upload files to selected dataset</div>
           <div className="flex items-center gap-3">
@@ -223,7 +153,7 @@ export default function DatasetsPage() {
           </div>
         </div>
 
-        
+        {/* Thumbnail Grid */}
         {(!selected) ? (
           <div className="mb-6">
             <div className="text-sm text-[#A3A3A3] mb-2">Images in selected dataset</div>
