@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useTransition, useRef } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../components/AuthProvider";
 import { Button } from "../../components/ui/button";
@@ -14,6 +14,7 @@ import {
   type ImageThumbnail,
 } from "./actions";
 import DatasetImageGrid from "../../components/DatasetImageGrid";
+import { useDatasetImageCache } from "./useDatasetImageCache";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -31,31 +32,8 @@ export default function DatasetsPage() {
   const [thumbnails, setThumbnails] = useState<ImageThumbnail[]>([]);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
 
-  // Cache thumbnails and totals per dataset to avoid refetch/render delay when switching
-  const thumbnailsCache = useRef<Record<string, ImageThumbnail[]>>({});
-  const totalsCache = useRef<Record<string, number>>({});
-
-  // Load cache from localStorage on mount
-  useEffect(() => {
-    try {
-      const cached = localStorage.getItem("datasetImageCache");
-      if (cached) {
-        const { thumbnails, totals, timestamp } = JSON.parse(cached);
-        const now = Date.now();
-        const oneHourMs = 60 * 60 * 1000;
-        // Only use cache if less than 1 hour old
-        if (now - timestamp < oneHourMs) {
-          thumbnailsCache.current = thumbnails || {};
-          totalsCache.current = totals || {};
-        } else {
-          // Cache expired, clear it
-          localStorage.removeItem("datasetImageCache");
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to load image cache from localStorage", e);
-    }
-  }, []);
+  // Cache hook
+  const cache = useDatasetImageCache();
 
   // Redirect to login if not logged in
   useEffect(() => {
@@ -64,13 +42,11 @@ export default function DatasetsPage() {
     }
   }, [user, loading, router]);
 
-  // Load datasets on login
   useEffect(() => {
     if (!user) return;
     loadDatasets();
   }, [user]);
 
-  // Load images whenever dataset or page changes
   useEffect(() => {
     if (!selected) {
       setThumbnails([]);
@@ -80,7 +56,6 @@ export default function DatasetsPage() {
     loadImagesForDataset(selected, imagesPage, imagesPerPage);
   }, [selected, imagesPage, imagesPerPage]);
 
-  // --- Dataset Loading ---
   const loadDatasets = () => {
     if (!user) return;
     setMessage(null);
@@ -104,13 +79,13 @@ export default function DatasetsPage() {
     setMessage(null);
 
     // Show cached first page immediately when switching datasets
-    if (page === 1 && thumbnailsCache.current[datasetId]) {
-      setThumbnails(thumbnailsCache.current[datasetId]);
-      setImagesTotal(totalsCache.current[datasetId] ?? 0);
+    const cached = cache.getCachedThumbnails(datasetId);
+    if (page === 1 && cached) {
+      setThumbnails(cached);
+      setImagesTotal(cache.getCachedTotal(datasetId) ?? 0);
       return;
     }
 
-    // Fetch images (cache first page)
     setThumbnails([]);
     startTransition(async () => {
       const result = await fetchImagesForDatasetAction(datasetId, page, perPage);
@@ -123,24 +98,12 @@ export default function DatasetsPage() {
         setImagesTotal(result.total);
         // Cache first page only
         if (page === 1) {
-          thumbnailsCache.current[datasetId] = result.thumbnails;
-          totalsCache.current[datasetId] = result.total;
-          // Persist to localStorage with timestamp
-          try {
-            localStorage.setItem("datasetImageCache", JSON.stringify({
-              thumbnails: thumbnailsCache.current,
-              totals: totalsCache.current,
-              timestamp: Date.now(),
-            }));
-          } catch (e) {
-            console.warn("Failed to save image cache to localStorage", e);
-          }
+          cache.setCached(datasetId, result.thumbnails, result.total);
         }
       }
     });
   };
 
-  // --- Image Deletion ---
   const handleDeleteImage = (imageId: string, storagePath: string) => {
     if (!confirm('Delete this image? This will remove it from the dataset.')) return;
     setDeletingIds(prev => [...prev, imageId]);
@@ -155,17 +118,7 @@ export default function DatasetsPage() {
         setThumbnails(prev => prev.filter(t => t.id !== imageId));
         setImagesTotal(prev => Math.max(0, prev - 1));
         // Invalidate cache for this dataset
-        delete thumbnailsCache.current[selected];
-        delete totalsCache.current[selected];
-        try {
-          localStorage.setItem("datasetImageCache", JSON.stringify({
-            thumbnails: thumbnailsCache.current,
-            totals: totalsCache.current,
-            timestamp: Date.now(),
-          }));
-        } catch (e) {
-          console.warn("Failed to update cache after delete", e);
-        }
+        cache.invalidate(selected);
         // Refresh counts in background
         await loadDatasets();
       }
@@ -173,7 +126,7 @@ export default function DatasetsPage() {
     });
   };
 
-  // --- Create Dataset ---
+  
   const handleCreateDataset = () => {
     if (!newName || !user) return;
     setMessage(null);
@@ -189,7 +142,7 @@ export default function DatasetsPage() {
     });
   };
 
-  // --- Upload Files ---
+  
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user || !selected) return;
     setUploading(true);
@@ -212,17 +165,7 @@ export default function DatasetsPage() {
           setThumbnails(prev => [...result.thumbnails, ...prev]);
           setImagesTotal(prev => prev + result.thumbnails.length);
           // Invalidate cache since new images were added
-          delete thumbnailsCache.current[selected];
-          delete totalsCache.current[selected];
-          try {
-            localStorage.setItem("datasetImageCache", JSON.stringify({
-              thumbnails: thumbnailsCache.current,
-              totals: totalsCache.current,
-              timestamp: Date.now(),
-            }));
-          } catch (e) {
-            console.warn("Failed to update cache after upload", e);
-          }
+          cache.invalidate(selected);
         }
         await loadDatasets();
       }
@@ -240,7 +183,7 @@ export default function DatasetsPage() {
         <h2 className="text-2xl text-white mb-4">Your datasets</h2>
         {message && <div className="mb-4 p-2 bg-[#222] text-[#E5E5E5]">{message}</div>}
 
-        {/* Dataset Selector */}
+        
         <div className="mb-6">
           <div className="text-sm text-[#A3A3A3] mb-2">Select an existing dataset</div>
           <div className="space-y-2">
@@ -255,7 +198,7 @@ export default function DatasetsPage() {
           </div>
         </div>
 
-        {/* Create Dataset */}
+        
         <div className="mb-6">
           <div className="text-sm text-[#A3A3A3] mb-2">Create a new dataset</div>
           <div className="flex gap-2">
@@ -269,7 +212,7 @@ export default function DatasetsPage() {
           </div>
         </div>
 
-        {/* Upload Files */}
+        
         <div className="mb-6">
           <div className="text-sm text-[#A3A3A3] mb-2">Upload files to selected dataset</div>
           <div className="flex items-center gap-3">
@@ -280,7 +223,7 @@ export default function DatasetsPage() {
           </div>
         </div>
 
-        {/* Thumbnail Grid */}
+        
         {(!selected) ? (
           <div className="mb-6">
             <div className="text-sm text-[#A3A3A3] mb-2">Images in selected dataset</div>
