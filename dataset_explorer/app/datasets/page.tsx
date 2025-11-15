@@ -123,9 +123,12 @@ export default function DatasetsPage() {
     try {
       const ds = datasets.find(d => d.id === selected);
       if (!ds) throw new Error('Selected dataset not found');
+        const fileArray = Array.from(files);
+        const fd = new FormData();
+        fileArray.forEach(f => fd.append("files", f));
+        fd.append("datasetId", ds.id);
 
-      const fileArray = Array.from(files);
-      const result = await uploadImagesAction(selected, ds.name, user.id, fileArray);
+      const result = await uploadImagesAction(selected, ds.name, user.id, fd);
       if (result.error) {
         setMessage(`Upload error: ${result.error}`);
       } else {

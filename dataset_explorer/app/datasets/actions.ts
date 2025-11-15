@@ -128,9 +128,12 @@ export async function uploadImagesAction(
   datasetId: string,
   datasetName: string,
   userId: string,
-  files: File[]
+  formData: FormData,
 ) {
   try {
+    const datasetId = formData.get("datasetId") as string;
+    const files = formData.getAll("files") as File[];
+    const uploadedCount = files.length;
     for (const file of files) {
       const storagePath = `${userId}/${datasetName}/${file.name}`;
 
