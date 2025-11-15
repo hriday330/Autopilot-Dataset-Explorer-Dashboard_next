@@ -3,6 +3,8 @@
 import { Bell, Clock, User, Download, Trash2, Tag, BarChart3 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import Link from "next/link";
+import { useUser } from "./AuthProvider";
 
 interface DashboardHeaderProps {
   onExport: () => void;
@@ -17,6 +19,8 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
     minute: '2-digit',
     hour12: false 
   });
+  // Read auth state from context
+  const { user, loading } = useUser();
 
   return (
     <header className="h-16 bg-[#121212] border-b border-[#1F1F1F] px-6 flex items-center justify-between">
@@ -83,9 +87,18 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
           <span className="text-sm text-[#E5E5E5]">{currentTime}</span>
         </div>
         
-        <button className="p-2 bg-[#1F1F1F] hover:bg-[#2A2A2A] rounded-lg transition-colors">
-          <User className="w-5 h-5 text-[#E5E5E5]" />
-        </button>
+        {/* Profile: show sign-in button if not signed in */}
+        {loading ? (
+          <div className="p-2 bg-[#1F1F1F] rounded-lg w-9 h-9" />
+        ) : !user ? (
+          <Link href="/auth/login" className="text-sm">
+            <Button className="bg-transparent border border-[#1F1F1F] text-[#A3A3A3] hover:text-[#E5E5E5] h-9 px-3">Sign in</Button>
+          </Link>
+        ) : (
+          <Link href="/profile" className="p-2 bg-[#1F1F1F] hover:bg-[#2A2A2A] rounded-lg transition-colors">
+            <User className="w-5 h-5 text-[#E5E5E5]" />
+          </Link>
+        )}
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
+import { AuthProvider } from "../components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "Autopilot Dataset Explorer",
@@ -13,7 +14,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }
