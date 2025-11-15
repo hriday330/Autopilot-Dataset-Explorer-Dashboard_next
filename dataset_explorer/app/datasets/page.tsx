@@ -13,6 +13,7 @@ import {
   type Dataset,
   type ImageThumbnail,
 } from "./actions";
+import DatasetImageGrid from "../../components/DatasetImageGrid";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -183,62 +184,24 @@ export default function DatasetsPage() {
           </div>
         </div>
 
-        {/* Thumbnail Grid */}
-        <div className="mb-6">
-          <div className="text-sm text-[#A3A3A3] mb-2">Images in selected dataset</div>
-          {!selected && <div className="text-sm text-[#6B6B6B]">Select a dataset to view images.</div>}
-          {selected && thumbnails.length === 0 && <div className="text-sm text-[#6B6B6B]">No images in this dataset.</div>}
-
-          {thumbnails.length > 0 && (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {thumbnails.map(t => (
-                  <div key={t.id} className="relative bg-[#0B0B0B] border border-[#1F1F1F] rounded overflow-hidden">
-                    <button
-                      onClick={() => handleDeleteImage(t.id, t.storage_path)}
-                      disabled={deletingIds.includes(t.id)}
-                      className="absolute top-1 right-1 z-10 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
-                      title="Delete image"
-                    >
-                      {deletingIds.includes(t.id) ? (
-                        <span className="text-xs">…</span>
-                      ) : (
-                        <span className="text-xs">×</span>
-                      )}
-                    </button>
-                    {t.url ? (
-                      <img src={t.url} alt={t.storage_path} className="w-full h-32 object-cover" />
-                    ) : (
-                      <div className="w-full h-32 flex items-center justify-center text-xs text-[#6B6B6B]">Preview not available</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Pagination controls */}
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-[#A3A3A3]">Showing page {imagesPage} — {imagesTotal} images</div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="border-[#1F1F1F] text-[#A3A3A3]"
-                    onClick={() => setImagesPage(p => Math.max(1, p - 1))}
-                    disabled={imagesPage === 1}
-                  >
-                    Prev
-                  </Button>
-                  <Button
-                    onClick={() => setImagesPage(p => p + 1)}
-                    className="bg-[#E82127]"
-                    disabled={imagesPage * imagesPerPage >= imagesTotal}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        {/* Thumbnail Grid (extracted) */}
+        {(!selected) ? (
+          <div className="mb-6">
+            <div className="text-sm text-[#A3A3A3] mb-2">Images in selected dataset</div>
+            <div className="text-sm text-[#6B6B6B]">Select a dataset to view images.</div>
+          </div>
+        ) : (
+          <DatasetImageGrid
+            thumbnails={thumbnails}
+            deletingIds={deletingIds}
+            imagesPage={imagesPage}
+            imagesTotal={imagesTotal}
+            imagesPerPage={imagesPerPage}
+            onDelete={handleDeleteImage}
+            onPrevPage={() => setImagesPage(p => Math.max(1, p - 1))}
+            onNextPage={() => setImagesPage(p => p + 1)}
+          />
+        )}
 
         <div className="mt-6">
           <Button variant="outline" className="border-[#1F1F1F] text-[#A3A3A3]" onClick={() => router.push('/')}>Back to dashboard</Button>
