@@ -8,6 +8,7 @@ import DatasetImageGrid from "../../components/DatasetImageGrid";
 import { useDatasets } from "./useDatasets";
 import { useLoadImages } from "./useLoadImages";
 import { useUpdateImages } from "./useUpdateImages";
+import Spinner from "../../components/ui/spinner";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function DatasetsPage() {
   const [newName, setNewName] = React.useState("");
   const [imagesPage, setImagesPage] = React.useState(1);
   const [imagesPerPage] = React.useState(12);
+  const [ initialLoading, setInitialLoading] = React.useState(true); 
 
   // Dataset management
   const {
@@ -24,6 +26,7 @@ export default function DatasetsPage() {
     loadDatasets,
     setMessage: setDatasetMessage,
     message: datasetMessage,
+    isPending,
   } = useDatasets();
 
   // Image loading with caching
@@ -68,7 +71,12 @@ export default function DatasetsPage() {
   // Load datasets on login
   useEffect(() => {
     if (!user) return;
-    loadDatasets(user.id, selected, setSelected);
+    if(initialLoading){
+      loadDatasets(user.id, selected, setSelected).finally(() => setInitialLoading(false));
+    } else {
+      loadDatasets(user.id, selected, setSelected);
+    }
+      
   }, [user]);
 
   // Load images whenever dataset or page changes
@@ -110,8 +118,10 @@ export default function DatasetsPage() {
   return (
     <div className="min-h-screen p-8 bg-[#0E0E0E]">
       <div className="max-w-4xl mx-auto bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
-        <h2 className="text-2xl text-white mb-4">Your datasets</h2>
-        {message && <div className="mb-4 p-2 bg-[#222] text-[#E5E5E5]">{message}</div>}
+        {initialLoading ? <Spinner text="Loading your datasets"/> : 
+        <>
+          <h2 className="text-2xl text-white mb-4">Your datasets</h2>
+          {message && <div className="mb-4 p-2 bg-[#222] text-[#E5E5E5]">{message}</div>}
 
         {/* Dataset Selector */}
         <div className="mb-6">
@@ -127,6 +137,7 @@ export default function DatasetsPage() {
             ))}
           </div>
         </div>
+
 
         {/* Create Dataset */}
         <div className="mb-6">
@@ -146,10 +157,11 @@ export default function DatasetsPage() {
         <div className="mb-6">
           <div className="text-sm text-[#A3A3A3] mb-2">Upload files to selected dataset</div>
           <div className="flex items-center gap-3">
-            <input type="file" multiple onChange={e => handleFiles(e.target.files)} />
-            <Button onClick={() => document.getElementById('file-input')?.click()} className="bg-[#E82127]">Choose files</Button>
+            {/** TODO: Create a file uploader component */}
+            <input type="file" multiple onChange={e => handleFiles(e.target.files)} className="text-white"/>
+            <Button className="bg-[#E82127]" onClick={() => document.getElementById('file-input')?.click()}>Choose files</Button>
             <input id="file-input" type="file" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
-            {uploading && <div className="text-sm text-[#A3A3A3]">Uploading…</div>}
+            {uploading && <div className="text-sm text-white">Uploading…</div>}
           </div>
         </div>
 
@@ -175,6 +187,7 @@ export default function DatasetsPage() {
         <div className="mt-6">
           <Button variant="outline" className="border-[#1F1F1F] text-[#A3A3A3]" onClick={() => router.push('/')}>Back to dashboard</Button>
         </div>
+        </>}
       </div>
     </div>
   );
