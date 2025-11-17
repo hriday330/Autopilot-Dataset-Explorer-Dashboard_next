@@ -38,6 +38,7 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@supabase-js/source": "github:supabase/supabase-js",
     "@supabase/supabase-js": "^2.81.1",
+    "@tanstack/react-query": "^5.90.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
