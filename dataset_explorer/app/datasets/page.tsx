@@ -10,6 +10,8 @@ import { useLoadImages } from "./useLoadImages";
 import { useUpdateImages } from "./useUpdateImages";
 import Spinner from "../../components/ui/spinner";
 import FileUploader from "../../components/ui/file-uploader";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import DatasetSelector from "../../components/DatasetSelector";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -113,23 +115,18 @@ export default function DatasetsPage() {
         {initialLoading ? <Spinner text="Loading your datasets"/> : 
         <>
           <h2 className="text-2xl text-white mb-4">Your datasets</h2>
-          {message && <div className="mb-4 p-2 bg-[#222] text-[#E5E5E5]">{message}</div>}
+          {message && (
+            <Alert variant="destructive" className="mb-4 border-red-600/50 bg-red-950/40 text-red-300">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
 
-        {/* Dataset Selector */}
-        <div className="mb-6">
-          <div className="text-sm text-[#A3A3A3] mb-2">Select an existing dataset</div>
-          <div className="space-y-2">
-            {datasets.length === 0 && <div className="text-sm text-[#6B6B6B]">No datasets found.</div>}
-            {datasets.map(ds => (
-              <label key={ds.id} className="flex items-center gap-3">
-                <input type="radio" name="dataset" checked={selected === ds.id} onChange={() => setSelected(ds.id)} />
-                <div className="text-sm text-[#E5E5E5]">{ds.name}</div>
-                <div className="text-xs text-[#A3A3A3]">({counts[ds.id] ?? 0} files)</div>
-              </label>
-            ))}
-          </div>
-        </div>
-
+        <DatasetSelector
+          datasets={datasets}
+          counts={counts}
+          selected={selected}
+          onSelect={setSelected}
+        />
 
         {/* Create Dataset */}
         <div className="mb-6">
@@ -170,8 +167,6 @@ export default function DatasetsPage() {
           label="Upload Image or ZIP"
           description="Upload one image or a ZIP containing multiple images."
         />
-
-
         {/* Thumbnail Grid */}
         {imagesLoading 
           ? <Spinner text="Loading your images"/> 
