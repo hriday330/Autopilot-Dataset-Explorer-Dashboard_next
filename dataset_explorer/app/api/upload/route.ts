@@ -84,6 +84,7 @@ export async function POST(req: Request) {
           url: "",
           storage_path: row.storage_path,
         })),
+        isZip: file.name.endsWith(".zip"),
       });
     }
 

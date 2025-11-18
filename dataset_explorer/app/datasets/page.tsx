@@ -57,6 +57,7 @@ export default function DatasetsPage() {
     },
     onUploadComplete: () => {
       loadDatasets(user?.id || "", selected);
+      loadImagesForDataset(selected, 1, imagesPerPage);
     },
   });
 

@@ -6,6 +6,7 @@ import {
   deleteImageAction,
   type ImageThumbnail,
 } from "./actions";
+import { supabase } from "../../lib/supabaseClient";
 
 interface ImageOperationsHandlers {
   onDeleteComplete?: () => void;
@@ -91,12 +92,27 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
 
     setMessage("Upload complete");
 
-    // identical behavior to before
-    if (json.thumbnails?.length > 0) {
-      onOptimisticAdd(json.thumbnails);
+    if (!json.isZip) {
+      // Refresh signed URLs in parallel
+      const newThumbnails = await Promise.all(
+        json.thumbnails.map(async (t) => {
+          const { data } = await supabase
+            .storage
+            .from("datasets")
+            .createSignedUrl(t.storage_path, 3600);
+
+          return {
+            ...t,
+            url: data?.signedUrl ?? t.url ?? "",
+          };
+        })
+      );
+      onOptimisticAdd(newThumbnails);
+    } else {
+      handlers.onUploadComplete?.();
     }
 
-    handlers.onUploadComplete?.();
+   
   } catch (err: any) {
     console.error(err);
     setMessage("Upload error: " + (err?.message ?? String(err)));
