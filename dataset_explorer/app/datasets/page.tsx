@@ -9,6 +9,7 @@ import { useDatasets } from "./useDatasets";
 import { useLoadImages } from "./useLoadImages";
 import { useUpdateImages } from "./useUpdateImages";
 import Spinner from "../../components/ui/spinner";
+import FileUploader from "../../components/ui/file-uploader";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function DatasetsPage() {
     loadImagesForDataset,
     setMessage: setImageMessage,
     message: imageMessage,
+    isPending: imagesLoading,
     cache,
   } = useLoadImages();
 
@@ -56,6 +58,7 @@ export default function DatasetsPage() {
     },
     onUploadComplete: () => {
       loadDatasets(user?.id || "", selected);
+      loadImagesForDataset(selected, 1, imagesPerPage);
     },
   });
 
@@ -103,17 +106,6 @@ export default function DatasetsPage() {
     setNewName("");
   };
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || !user || !selected) return;
-    const ds = datasets.find(d => d.id === selected);
-    if (!ds) return;
-
-    await handleUploadFiles(files, selected, ds.name, user.id, (newThumbnails) => {
-      setThumbnails(prev => [...newThumbnails, ...prev]);
-      setImagesTotal(prev => prev + newThumbnails.length);
-      cache.invalidate(selected);
-    });
-  };
 
   return (
     <div className="min-h-screen p-8 bg-[#0E0E0E]">
@@ -154,19 +146,37 @@ export default function DatasetsPage() {
         </div>
 
         {/* Upload Files */}
-        <div className="mb-6">
-          <div className="text-sm text-[#A3A3A3] mb-2">Upload files to selected dataset</div>
-          <div className="flex items-center gap-3">
-            {/** TODO: Create a file uploader component */}
-            <input type="file" multiple onChange={e => handleFiles(e.target.files)} className="text-white"/>
-            <Button className="bg-[#E82127]" onClick={() => document.getElementById('file-input')?.click()}>Choose files</Button>
-            <input id="file-input" type="file" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
-            {uploading && <div className="text-sm text-white">Uploading…</div>}
-          </div>
-        </div>
+        <FileUploader
+          onSelect={async (files) => {
+            const ds = datasets.find((d) => d.id === selected);
+            if (!ds || !user) return;
+
+            await handleUploadFiles(
+              files,
+              selected,
+              ds.name,
+              user.id,
+              (newThumbnails) => {
+                setThumbnails((prev) => [...newThumbnails, ...prev]);
+                setImagesTotal((prev) => prev + newThumbnails.length);
+                cache.invalidate(selected);
+              }
+            );
+          }}
+          accept="image/*,.zip"
+          maxFiles={1}
+          allowZip={true}
+          uploading={uploading}
+          label="Upload Image or ZIP"
+          description="Upload one image or a ZIP containing multiple images."
+        />
+
 
         {/* Thumbnail Grid */}
-        {(!selected) ? (
+        {imagesLoading 
+          ? <Spinner text="Loading your images"/> 
+          : (!selected) 
+          ? (
           <div className="mb-6">
             <div className="text-sm text-[#A3A3A3] mb-2">Images in selected dataset</div>
             <div className="text-sm text-[#6B6B6B]">Select a dataset to view images.</div>
