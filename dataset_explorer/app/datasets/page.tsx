@@ -10,6 +10,7 @@ import { useLoadImages } from "./useLoadImages";
 import { useUpdateImages } from "./useUpdateImages";
 import Spinner from "../../components/ui/spinner";
 import FileUploader from "../../components/ui/file-uploader";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -113,7 +114,11 @@ export default function DatasetsPage() {
         {initialLoading ? <Spinner text="Loading your datasets"/> : 
         <>
           <h2 className="text-2xl text-white mb-4">Your datasets</h2>
-          {message && <div className="mb-4 p-2 bg-[#222] text-[#E5E5E5]">{message}</div>}
+          {message && (
+            <Alert variant="destructive" className="mb-4 border-red-600/50 bg-red-950/40 text-red-300">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
 
         {/* Dataset Selector */}
         <div className="mb-6">
