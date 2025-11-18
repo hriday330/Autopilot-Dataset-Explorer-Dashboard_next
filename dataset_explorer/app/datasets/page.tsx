@@ -39,6 +39,7 @@ export default function DatasetsPage() {
     loadImagesForDataset,
     setMessage: setImageMessage,
     message: imageMessage,
+    isPending: imagesLoading,
     cache,
   } = useLoadImages();
 
@@ -105,17 +106,6 @@ export default function DatasetsPage() {
     setNewName("");
   };
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || !user || !selected) return;
-    const ds = datasets.find(d => d.id === selected);
-    if (!ds) return;
-
-    await handleUploadFiles(files, selected, ds.name, user.id, (newThumbnails) => {
-      setThumbnails(prev => [...newThumbnails, ...prev]);
-      setImagesTotal(prev => prev + newThumbnails.length);
-      cache.invalidate(selected);
-    });
-  };
 
   return (
     <div className="min-h-screen p-8 bg-[#0E0E0E]">
@@ -183,7 +173,10 @@ export default function DatasetsPage() {
 
 
         {/* Thumbnail Grid */}
-        {(!selected) ? (
+        {imagesLoading 
+          ? <Spinner text="Loading your images"/> 
+          : (!selected) 
+          ? (
           <div className="mb-6">
             <div className="text-sm text-[#A3A3A3] mb-2">Images in selected dataset</div>
             <div className="text-sm text-[#6B6B6B]">Select a dataset to view images.</div>
