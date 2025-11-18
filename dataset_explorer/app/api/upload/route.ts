@@ -1,113 +1,127 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
+import JSZip from "jszip";
+import pLimit from "p-limit";
+
+const CONCURRENCY = 10;
+const BATCH = 2000;
+
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-
-    const datasetId = formData.get("datasetId") as string;
-    const datasetName = formData.get("datasetName") as string;
-    const userId = formData.get("userId") as string;
-    const files = formData.getAll("files") as File[];
+    const form = await req.formData();
+    const datasetId = form.get("datasetId") as string;
+    const datasetName = form.get("datasetName") as string;
+    const userId = form.get("userId") as string;
+    const files = form.getAll("files") as File[];
 
     if (!datasetId || !datasetName || !userId) {
-      return NextResponse.json(
-        { success: false, error: "Missing required fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
     }
 
-    if (!files || files.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "No files provided" },
-        { status: 400 }
+    const file = files[0];
+
+    // ---------------------------------------------------------------------
+    // ZIP UPLOAD
+    // ---------------------------------------------------------------------
+    if (file.name.endsWith(".zip")) {
+      const zipBuf = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(zipBuf);
+
+      const entries = Object.values(zip.files).filter(f => {
+        const lower = f.name.toLowerCase();
+        return (
+          !f.dir &&
+          (lower.endsWith(".jpg") ||
+            lower.endsWith(".jpeg") ||
+            lower.endsWith(".png") ||
+            lower.endsWith(".webp"))
+        );
+      });
+
+      const limit = pLimit(CONCURRENCY);
+      const rows: any[] = [];
+
+      await Promise.all(
+        entries.map(entry =>
+          limit(async () => {
+            const blob = await entry.async("nodebuffer");
+            const filename = entry.name.split("/").pop()!;
+            const storagePath = `${userId}/${datasetName}/${filename}`;
+
+            const { error: uploadErr } = await supabaseServer.storage
+              .from("datasets")
+              .upload(storagePath, blob, { upsert: true });
+
+            if (uploadErr) throw uploadErr;
+
+            rows.push({
+              dataset_id: datasetId,
+              storage_path: storagePath,
+              width: null,
+              height: null,
+            });
+          })
+        )
       );
+
+      const inserted: any[] = [];
+
+      // Batch DB insert
+      for (let i = 0; i < rows.length; i += BATCH) {
+        const batch = rows.slice(i, i + BATCH);
+        const { data, error } = await supabaseServer.from("images").insert(batch).select();
+
+        if (error) throw error;
+        inserted.push(...data);
+      }
+
+      return NextResponse.json({
+        success: true,
+        thumbnails: inserted.map((row) => ({
+          id: row.id,
+          url: "",
+          storage_path: row.storage_path,
+        })),
+      });
     }
 
-    const uploadedImages: any[] = [];
+    // ---------------------------------------------------------------------
+    // NORMAL SINGLE / MULTI IMAGE UPLOAD
+    // ---------------------------------------------------------------------
+    const thumbnails: any[] = [];
 
     for (const file of files) {
       const storagePath = `${userId}/${datasetName}/${file.name}`;
 
-      // Upload file to Supabase storage
-      const { error: uploadError } = await supabaseServer.storage
+      const { error: uploadErr } = await supabaseServer.storage
         .from("datasets")
         .upload(storagePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadErr) throw uploadErr;
 
-      // Try to get dimensions if it's an image
-      let width: number | null = null;
-      let height: number | null = null;
-
-      if (file.type?.startsWith("image/")) {
-        try {
-          const buffer = await file.arrayBuffer();
-          const blob = new Blob([buffer], { type: file.type });
-          const url = URL.createObjectURL(blob);
-
-          await new Promise<void>((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-              width = img.naturalWidth;
-              height = img.naturalHeight;
-              URL.revokeObjectURL(url);
-              resolve();
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(url);
-              resolve();
-            };
-            img.src = url;
-          });
-        } catch (_) {}
-      }
-
-      // Insert DB record
-      const { data: imgData, error: imgErr } = await supabaseServer
+      const { data, error: insertErr } = await supabaseServer
         .from("images")
         .insert({
           dataset_id: datasetId,
           storage_path: storagePath,
-          width,
-          height,
         })
         .select()
         .single();
 
-      if (imgErr) throw imgErr;
+      if (insertErr) throw insertErr;
 
-      // Create signed preview URL
-      const signed = await supabaseServer.storage
-        .from("datasets")
-        .createSignedUrl(storagePath, 3600);
-
-      const signedUrl =
-        (signed as any).data?.signedUrl ||
-        (signed as any).data?.signedURL ||
-        (signed as any).data?.publicUrl ||
-        (signed as any).publicURL ||
-        "";
-
-      uploadedImages.push({
-        id: imgData.id,
-        url: signedUrl,
+      thumbnails.push({
+        id: data.id,
+        url: "",
         storage_path: storagePath,
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      thumbnails: uploadedImages,
-    });
+    return NextResponse.json({ success: true, thumbnails });
   } catch (err: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: err?.message ?? "Upload failed",
-        thumbnails: [],
-      },
-      { status: 500 }
-    );
+    console.error(err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
