@@ -24,7 +24,6 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     storagePath: string,
     onOptimisticDelete: () => void
   ) => {
-    if (!confirm("Delete this image? This will remove it from the dataset.")) return;
     setDeletingIds(prev => [...prev, imageId]);
     setMessage(null);
     startTransition(async () => {

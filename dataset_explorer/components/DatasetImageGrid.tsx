@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Button } from "./ui/button";
+import DeleteConfirmDialog from "./ui/delete-confirm-dialog";
 
 export type ImageThumbnail = {
   id: string;
@@ -39,9 +40,10 @@ function DatasetImageGrid({
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {thumbnails.map((t) => (
-              <div key={t.id} className="relative bg-[#0B0B0B] border border-[#1F1F1F] rounded overflow-hidden">
+             <div key={t.id} className="relative bg-[#0B0B0B] border border-[#1F1F1F] rounded overflow-hidden">
+                 <DeleteConfirmDialog
+                    onConfirm={() => onDelete(t.id, t.storage_path)}>                 
                 <button
-                  onClick={() => onDelete(t.id, t.storage_path)}
                   disabled={deletingIds.includes(t.id)}
                   className="absolute top-1 right-1 z-10 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
                   title="Delete image"
@@ -52,6 +54,7 @@ function DatasetImageGrid({
                     <span className="text-xs">×</span>
                   )}
                 </button>
+            </DeleteConfirmDialog>
                 {t.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={t.url} alt={t.storage_path} className="w-full h-32 object-cover" />
