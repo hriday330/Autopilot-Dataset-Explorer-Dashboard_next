@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import {
   createDatasetAction,
-  uploadImagesAction,
   deleteImageAction,
   type ImageThumbnail,
 } from "./actions";
@@ -56,39 +55,55 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   };
 
   const handleUploadFiles = async (
-    files: FileList | null,
-    datasetId: string,
-    datasetName: string,
-    userId: string,
-    onOptimisticAdd: (thumbnails: ImageThumbnail[]) => void
-  ) => {
-    if (!files || !userId || !datasetId) return;
-    setUploading(true);
-    setMessage(null);
-    try {
-      const fileArray = Array.from(files);
-      const fd = new FormData();
-      fileArray.forEach(f => fd.append("files", f));
-      fd.append("datasetId", datasetId);
+  files: FileList | null,
+  datasetId: string,
+  datasetName: string,
+  userId: string,
+  onOptimisticAdd: (thumbnails: ImageThumbnail[]) => void
+) => {
+  if (!files || !userId || !datasetId) return;
 
-      const result = await uploadImagesAction(datasetId, datasetName, userId, fd);
-      if (result.error) {
-        setMessage(`Upload error: ${result.error}`);
-      } else {
-        setMessage("Upload complete");
-        // Optimistic update: prepend new images to grid
-        if (result.thumbnails && result.thumbnails.length > 0) {
-          onOptimisticAdd(result.thumbnails);
-        }
-        handlers.onUploadComplete?.();
-      }
-    } catch (err: any) {
-      console.error(err);
-      setMessage("Upload error: " + (err?.message ?? String(err)));
-    } finally {
-      setUploading(false);
+  setUploading(true);
+  setMessage(null);
+
+  try {
+    const fd = new FormData();
+
+    // append files (single OR multiple)
+    Array.from(files).forEach((f) => fd.append("files", f));
+
+    // required metadata
+    fd.append("datasetId", datasetId);
+    fd.append("datasetName", datasetName);
+    fd.append("userId", userId);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: fd,
+    });
+
+    const json = await res.json();
+
+    if (!json.success) {
+      setMessage(`Upload error: ${json.error}`);
+      return;
     }
-  };
+
+    setMessage("Upload complete");
+
+    // identical behavior to before
+    if (json.thumbnails?.length > 0) {
+      onOptimisticAdd(json.thumbnails);
+    }
+
+    handlers.onUploadComplete?.();
+  } catch (err: any) {
+    console.error(err);
+    setMessage("Upload error: " + (err?.message ?? String(err)));
+  } finally {
+    setUploading(false);
+  }
+};
 
   return {
     uploading,
