@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseServer } from "../../lib/supabaseServer";
+import { supabaseServer } from "@lib/supabaseServer";
 import { revalidatePath } from "next/cache";
 
 export interface Dataset {

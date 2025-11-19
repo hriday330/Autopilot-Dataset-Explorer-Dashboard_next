@@ -1,10 +1,10 @@
 "use client";
 
-import { DashboardHeader } from "../components/DashboardHeader";
-import { Sidebar } from "../components/Sidebar";
-import { ImageViewer } from "../components/ImageViewer";
-import { AnalyticsPanel } from "../components/AnalyticsPanel";
-import { DashboardFooter } from "../components/DashboardFooter";
+import { DashboardHeader } from "@components/DashboardHeader";
+import { Sidebar } from "@components/Sidebar";
+import { ImageViewer } from "@components/ImageViewer";
+import { AnalyticsPanel } from "@components/AnalyticsPanel";
+import { DashboardFooter } from "@components/DashboardFooter";
 import { useState, useEffect } from "react";
 
 interface BoundingBox {

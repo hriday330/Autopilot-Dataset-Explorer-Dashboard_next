@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../components/ui/dialog";
+} from "@components/ui/dialog";
 import {
   Command,
   CommandInput,
@@ -15,8 +15,8 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandItem,
-} from "../components/ui/command";
-import { Button } from "../components/ui/button";
+} from "@components/ui/command";
+import { Button } from "@components/ui/button";
 
 type Dataset = {
   id: string;
