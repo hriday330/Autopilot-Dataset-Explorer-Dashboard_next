@@ -5,7 +5,7 @@ import {
   createDatasetAction,
   deleteImageAction,
   type ImageThumbnail,
-} from "../actions";
+} from "@lib/actions";
 import { supabase } from "@lib/supabaseClient";
 import { uploadWithProgress } from "@lib/uploadWithProgress";
 
