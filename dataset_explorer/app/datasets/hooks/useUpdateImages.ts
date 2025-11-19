@@ -5,9 +5,9 @@ import {
   createDatasetAction,
   deleteImageAction,
   type ImageThumbnail,
-} from "./actions";
-import { supabase } from "../../lib/supabaseClient";
-import { uploadWithProgress } from "../../lib/uploadWithProgress";
+} from "../actions";
+import { supabase } from "@lib/supabaseClient";
+import { uploadWithProgress } from "@lib/uploadWithProgress";
 
 interface ImageOperationsHandlers {
   onDeleteComplete?: () => void;

@@ -11,7 +11,7 @@ import { useUpdateImages } from "./hooks/useUpdateImages";
 import Spinner from "../../components/ui/spinner";
 import FileUploader from "../../components/ui/file-uploader";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import DatasetSelector from "../../components/DatasetSelector";
+import DatasetSelector from "@components/DatasetSelector";
 import { Progress } from "../../components/ui/progress";
 import DatasetCreation from "../../components/DatasetCreation";
 
