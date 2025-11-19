@@ -75,19 +75,28 @@ export default function Page() {
     localStorage.setItem("autopilot-labels", JSON.stringify(boxes));
   }, [boxes]);
 
-  const totalFrames = thumbnails.length;
-
-  const handlePrevFrame = () => {
-    setCurrentFrame((prev) =>
-      prev > 0 ? prev - 1 : totalFrames - 1
-    );
-  };
+  const totalFrames = imagesTotal;
 
   const handleNextFrame = () => {
-    setCurrentFrame((prev) =>
-      prev < totalFrames - 1 ? prev + 1 : 0
-    );
+  if (currentFrame < thumbnails.length - 1) {
+    setCurrentFrame(currentFrame + 1);
+  } else {
+    // reached end of this page → load next page
+    setCurrentPage((prev) => prev + 1);
+    setCurrentFrame(0);
+  }
+};
+
+  const handlePrevFrame = () => {
+    if (currentFrame > 0) {
+      setCurrentFrame(currentFrame - 1);
+    } else if (currentPage > 1) {
+      // go to previous page’s last frame
+      setCurrentPage((prev) => prev - 1);
+      setCurrentFrame(PAGE_SIZE - 1);
+    }
   };
+
 
   //
   // ────────────────────────────────────────────────────────────────
@@ -126,11 +135,8 @@ export default function Page() {
 
   const labeledFramesCount = Object.keys(boxes).filter((key) => boxes[parseInt(key)].length > 0).length;
 
-  //
-  // ────────────────────────────────────────────────────────────────
-  //  UI
-  // ────────────────────────────────────────────────────────────────
-  //
+  const absoluteFrameNumber = (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
+
   return (
     <div className="h-screen flex flex-col bg-[#0E0E0E] overflow-hidden">
       <DashboardHeader
@@ -144,10 +150,6 @@ export default function Page() {
         <Sidebar
           selectedLabel={selectedLabel}
           onLabelSelect={setSelectedLabel}
-          frames={thumbnails}                // 🔥 replaced static frames
-          boxes={boxes}
-          currentFrame={currentFrame}
-          onFrameSelect={setCurrentFrame}
         />
 
         <div className="flex-1 flex flex-col overflow-auto">
@@ -155,7 +157,7 @@ export default function Page() {
             thumbnails.length > 0 ? (
               <ImageViewer
                 frame={thumbnails[currentFrame]} // 🔥 replaced static frame
-                frameNumber={currentFrame + 1}
+                frameNumber={absoluteFrameNumber}
                 totalFrames={totalFrames}
                 selectedLabel={selectedLabel}
                 onPrevFrame={handlePrevFrame}
