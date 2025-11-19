@@ -11,34 +11,40 @@ type CacheEntry = {
 export function useDatasetImageCache() {
   const queryClient = useQueryClient();
 
-  // Keep query keys consistent.
-  const key = (datasetId: string) => ["datasetImageCache", datasetId] as const;
+  const key = (datasetId: string, page: number) =>
+    ["datasetImageCache", datasetId, page] as const;
 
-  const getCachedThumbnails = (datasetId: string) => {
-    const data = queryClient.getQueryData<CacheEntry>(key(datasetId));
-    return data?.thumbnails;
+  const getCachedThumbnails = (datasetId: string, page: number): CacheEntry | null => {
+    return queryClient.getQueryData<CacheEntry>(key(datasetId, page)) ?? null;
   };
 
-  const getCachedTotal = (datasetId: string) => {
-    const data = queryClient.getQueryData<CacheEntry>(key(datasetId));
-    return data?.total;
+  const hasPage = (datasetId: string, page: number): boolean => {
+    return queryClient.getQueryData<CacheEntry>(key(datasetId, page)) != null;
   };
 
-  const setCached = (datasetId: string, thumbnails: ImageThumbnail[], total: number) => {
-    queryClient.setQueryData<CacheEntry>(key(datasetId), {
+  const setCachedPage = (
+    datasetId: string,
+    page: number,
+    thumbnails: ImageThumbnail[],
+    total: number
+  ) => {
+    queryClient.setQueryData<CacheEntry>(key(datasetId, page), {
       thumbnails,
       total,
     });
   };
 
   const invalidate = (datasetId: string) => {
-    queryClient.removeQueries({ queryKey: key(datasetId) });
+    queryClient.removeQueries({
+      queryKey: ["datasetImageCache", datasetId],
+      exact: false,
+    });
   };
 
   return {
     getCachedThumbnails,
-    getCachedTotal,
-    setCached,
+    hasPage,
+    setCachedPage,
     invalidate,
   };
 }
