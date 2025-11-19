@@ -168,7 +168,7 @@ export default function DatasetsPage() {
           description="Upload one image or a ZIP containing multiple images."
         />
 
-        {uploading && <Progress value={uploadProgress*100} />}
+        {uploading && <Progress className="my-2" value={uploadProgress*100} />}
         
         {/* Thumbnail Grid */}
         {imagesLoading 
