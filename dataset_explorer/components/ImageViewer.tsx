@@ -14,11 +14,11 @@ interface BoundingBox {
 }
 
 interface Frame {
-  id: number;
+  id: string;
   url: string;
-  speed: string;
-  timestamp: string;
-  confidence: string;
+  speed?: string;
+  timestamp?: string;
+  confidence?: string;
 }
 
 interface ImageViewerProps {
@@ -28,8 +28,8 @@ interface ImageViewerProps {
   selectedLabel: string;
   onPrevFrame: () => void;
   onNextFrame: () => void;
-  boxes: Record<number, BoundingBox[]>;
-  setBoxes: React.Dispatch<React.SetStateAction<Record<number, BoundingBox[]>>>;
+  boxes: Record<string, BoundingBox[]>;
+  setBoxes: React.Dispatch<React.SetStateAction<Record<string, BoundingBox[]>>>;
 }
 
 export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, onPrevFrame, onNextFrame, boxes, setBoxes }: ImageViewerProps) {

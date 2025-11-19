@@ -178,7 +178,12 @@ export default function DatasetsPage() {
         )}
 
         <div className="mt-6">
-          <Button variant="outline" className="border-[#1F1F1F] text-[#A3A3A3]" onClick={() => router.push('/')}>Back to dashboard</Button>
+          <Button
+            variant="outline" 
+            className="border-[#1F1F1F] text-[#A3A3A3]" 
+            onClick={() => router.push(`/?dataset=${selected}`)}>
+            Annotate this dataset
+            </Button>
         </div>
         </>}
       </div>
