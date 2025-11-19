@@ -7,6 +7,7 @@ import {
   type ImageThumbnail,
 } from "./actions";
 import { supabase } from "../../lib/supabaseClient";
+import { uploadWithProgress } from "../../lib/uploadWithProgress";
 
 interface ImageOperationsHandlers {
   onDeleteComplete?: () => void;
@@ -18,6 +19,7 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const handleDeleteImage = async (
     imageId: string,
@@ -77,12 +79,12 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     fd.append("datasetName", datasetName);
     fd.append("userId", userId);
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: fd,
+    setUploadProgress(0);
+    const json = await uploadWithProgress({
+      url: "/api/upload",
+      formData: fd,
+      onProgress: setUploadProgress, 
     });
-
-    const json = await res.json();
 
     if (!json.success) {
       setMessage(`Upload error: ${json.error}`);
@@ -129,5 +131,7 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     handleCreateDataset,
     handleUploadFiles,
     isPending,
+    uploadProgress, 
+    setUploadProgress
   };
 }

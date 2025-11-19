@@ -12,6 +12,7 @@ import Spinner from "../../components/ui/spinner";
 import FileUploader from "../../components/ui/file-uploader";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import DatasetSelector from "../../components/DatasetSelector";
+import { Progress } from "../../components/ui/progress";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -29,7 +30,6 @@ export default function DatasetsPage() {
     loadDatasets,
     setMessage: setDatasetMessage,
     message: datasetMessage,
-    isPending,
   } = useDatasets();
 
   // Image loading with caching
@@ -52,8 +52,8 @@ export default function DatasetsPage() {
     handleDeleteImage: deleteImageHandler,
     handleCreateDataset: createDatasetHandler,
     handleUploadFiles,
-    setMessage: setOpMessage,
     message: opMessage,
+    uploadProgress,
   } = useUpdateImages({
     onDeleteComplete: () => {
       loadDatasets(user?.id || "", selected);
@@ -142,12 +142,12 @@ export default function DatasetsPage() {
           </div>
         </div>
 
+      
         {/* Upload Files */}
         <FileUploader
           onSelect={async (files) => {
             const ds = datasets.find((d) => d.id === selected);
             if (!ds || !user) return;
-
             await handleUploadFiles(
               files,
               selected,
@@ -167,6 +167,9 @@ export default function DatasetsPage() {
           label="Upload Image or ZIP"
           description="Upload one image or a ZIP containing multiple images."
         />
+
+        {uploading && <Progress value={uploadProgress*100} />}
+        
         {/* Thumbnail Grid */}
         {imagesLoading 
           ? <Spinner text="Loading your images"/> 
