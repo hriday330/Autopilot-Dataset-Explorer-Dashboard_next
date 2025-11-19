@@ -24,7 +24,6 @@ export default function DatasetsPage() {
   const [imagesPerPage] = React.useState(12);
   const [ initialLoading, setInitialLoading] = React.useState(true); 
 
-  // Dataset management
   const {
     datasets,
     counts,
@@ -33,7 +32,6 @@ export default function DatasetsPage() {
     message: datasetMessage,
   } = useDatasets();
 
-  // Image loading with caching
   const {
     thumbnails,
     setThumbnails,
@@ -46,7 +44,6 @@ export default function DatasetsPage() {
     cache,
   } = useLoadImages();
 
-  // Image operations (upload, delete, create)
   const {
     uploading,
     deletingIds,
@@ -67,14 +64,12 @@ export default function DatasetsPage() {
 
   const message = datasetMessage || imageMessage || opMessage;
 
-  // Redirect to login if not logged in
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/auth/login");
     }
   }, [user, loading, router]);
 
-  // Load datasets on login
   useEffect(() => {
     if (!user) return;
     if(initialLoading){
@@ -85,7 +80,6 @@ export default function DatasetsPage() {
       
   }, [user]);
 
-  // Load images whenever dataset or page changes
   useEffect(() => {
     if (!selected) {
       setThumbnails([]);
