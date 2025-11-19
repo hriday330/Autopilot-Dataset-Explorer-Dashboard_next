@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
 import JSZip from "jszip";
 import pLimit from "p-limit";
+import sharp from "sharp";
 
 const CONCURRENCY = 10;
 const BATCH = 2000;
 
 export const runtime = "nodejs";
-
+// TODO: Add compression before uploading images on the clientside
 export async function POST(req: Request) {
   try {
     const form = await req.formData();
@@ -50,6 +51,17 @@ export async function POST(req: Request) {
             const filename = entry.name.split("/").pop()!;
             const storagePath = `${userId}/${datasetName}/${filename}`;
 
+            let compressed: Buffer;
+
+          try {
+            compressed = await sharp(blob)
+              .rotate() // auto-orient based on EXIF
+              .jpeg({ quality: 20 }) // convert to high-quality JPEG
+              .toBuffer();
+          } catch (err) {
+            console.error("Sharp compression failed, falling back to raw buffer:", err);
+            compressed = blob; // fallback: upload original
+          }
             const { error: uploadErr } = await supabaseServer.storage
               .from("datasets")
               .upload(storagePath, blob, { upsert: true });
