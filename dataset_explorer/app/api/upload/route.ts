@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
 import JSZip from "jszip";
 import pLimit from "p-limit";
+import sharp from "sharp";
 
 const CONCURRENCY = 10;
 const BATCH = 2000;
@@ -21,10 +22,7 @@ export async function POST(req: Request) {
     }
 
     const file = files[0];
-
-    // ---------------------------------------------------------------------
-    // ZIP UPLOAD
-    // ---------------------------------------------------------------------
+    
     if (file.name.endsWith(".zip")) {
       const zipBuf = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(zipBuf);
@@ -50,18 +48,33 @@ export async function POST(req: Request) {
             const filename = entry.name.split("/").pop()!;
             const storagePath = `${userId}/${datasetName}/${filename}`;
 
-            const { error: uploadErr } = await supabaseServer.storage
-              .from("datasets")
-              .upload(storagePath, blob, { upsert: true });
+            let compressed: Buffer;
 
-            if (uploadErr) throw uploadErr;
+            try {
+              compressed = await sharp(blob)
+                .rotate() 
+                .resize({ width: 2000, withoutEnlargement: true }) // better network perf
+                .webp({
+                  quality: 70,
+                  effort: 5,     
+                })
+                .toBuffer();
+            } catch (err) {
+              console.error("Sharp compression failed, falling back to raw buffer:", err);
+              compressed = blob; 
+            }
+              const { error: uploadErr } = await supabaseServer.storage
+                .from("datasets")
+                .upload(storagePath, compressed, { upsert: true });
 
-            rows.push({
-              dataset_id: datasetId,
-              storage_path: storagePath,
-              width: null,
-              height: null,
-            });
+              if (uploadErr) throw uploadErr;
+
+              rows.push({
+                dataset_id: datasetId,
+                storage_path: storagePath,
+                width: null,
+                height: null,
+              });
           })
         )
       );
@@ -88,9 +101,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // ---------------------------------------------------------------------
-    // NORMAL SINGLE / MULTI IMAGE UPLOAD
-    // ---------------------------------------------------------------------
     const thumbnails: any[] = [];
 
     for (const file of files) {

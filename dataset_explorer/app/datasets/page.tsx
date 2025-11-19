@@ -12,6 +12,8 @@ import Spinner from "../../components/ui/spinner";
 import FileUploader from "../../components/ui/file-uploader";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import DatasetSelector from "../../components/DatasetSelector";
+import { Progress } from "../../components/ui/progress";
+import DatasetCreation from "../../components/DatasetCreation";
 
 export default function DatasetsPage() {
   const router = useRouter();
@@ -22,17 +24,14 @@ export default function DatasetsPage() {
   const [imagesPerPage] = React.useState(12);
   const [ initialLoading, setInitialLoading] = React.useState(true); 
 
-  // Dataset management
   const {
     datasets,
     counts,
     loadDatasets,
     setMessage: setDatasetMessage,
     message: datasetMessage,
-    isPending,
   } = useDatasets();
 
-  // Image loading with caching
   const {
     thumbnails,
     setThumbnails,
@@ -45,15 +44,14 @@ export default function DatasetsPage() {
     cache,
   } = useLoadImages();
 
-  // Image operations (upload, delete, create)
   const {
     uploading,
     deletingIds,
     handleDeleteImage: deleteImageHandler,
     handleCreateDataset: createDatasetHandler,
     handleUploadFiles,
-    setMessage: setOpMessage,
     message: opMessage,
+    uploadProgress,
   } = useUpdateImages({
     onDeleteComplete: () => {
       loadDatasets(user?.id || "", selected);
@@ -66,14 +64,12 @@ export default function DatasetsPage() {
 
   const message = datasetMessage || imageMessage || opMessage;
 
-  // Redirect to login if not logged in
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/auth/login");
     }
   }, [user, loading, router]);
 
-  // Load datasets on login
   useEffect(() => {
     if (!user) return;
     if(initialLoading){
@@ -84,7 +80,6 @@ export default function DatasetsPage() {
       
   }, [user]);
 
-  // Load images whenever dataset or page changes
   useEffect(() => {
     if (!selected) {
       setThumbnails([]);
@@ -128,26 +123,16 @@ export default function DatasetsPage() {
           onSelect={setSelected}
         />
 
-        {/* Create Dataset */}
-        <div className="mb-6">
-          <div className="text-sm text-[#A3A3A3] mb-2">Create a new dataset</div>
-          <div className="flex gap-2">
-            <input
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              placeholder="dataset-name"
-              className="bg-transparent border border-[#1F1F1F] px-3 py-2 rounded text-white"
-            />
-            <Button onClick={handleCreateDataset} className="bg-[#E82127]">Create</Button>
-          </div>
-        </div>
+        <DatasetCreation
+          newName={newName}
+          setNewName={setNewName}
+          onCreate={handleCreateDataset}
+        />
 
-        {/* Upload Files */}
         <FileUploader
           onSelect={async (files) => {
             const ds = datasets.find((d) => d.id === selected);
             if (!ds || !user) return;
-
             await handleUploadFiles(
               files,
               selected,
@@ -167,6 +152,9 @@ export default function DatasetsPage() {
           label="Upload Image or ZIP"
           description="Upload one image or a ZIP containing multiple images."
         />
+
+        {uploading && <Progress className="my-2" value={uploadProgress*100} />}
+        
         {/* Thumbnail Grid */}
         {imagesLoading 
           ? <Spinner text="Loading your images"/> 

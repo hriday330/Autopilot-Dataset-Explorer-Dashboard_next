@@ -13,8 +13,6 @@ export function useLoadImages() {
 
   const loadImagesForDataset = (datasetId: string, page: number, perPage: number) => {
     setMessage(null);
-
-    // Show cached first page immediately when switching datasets
     const cached = cache.getCachedThumbnails(datasetId);
     if (page === 1 && cached) {
       setThumbnails(cached);
@@ -32,7 +30,6 @@ export function useLoadImages() {
       } else {
         setThumbnails(result.thumbnails);
         setImagesTotal(result.total);
-        // Cache first page only
         if (page === 1) {
           cache.setCached(datasetId, result.thumbnails, result.total);
         }
