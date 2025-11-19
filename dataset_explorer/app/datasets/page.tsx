@@ -73,7 +73,7 @@ export default function DatasetsPage() {
   useEffect(() => {
     if (!user) return;
     if(initialLoading){
-      loadDatasets(user.id, selected, setSelected).finally(() => setInitialLoading(false));
+      loadDatasets(user.id, selected, setSelected)?.finally(() => setInitialLoading(false));
     } else {
       loadDatasets(user.id, selected, setSelected);
     }
