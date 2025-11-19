@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import "../styles/globals.css";
+import "@styles/globals.css";
 import { AuthProvider } from "@components/AuthProvider";
-import { ReactQueryProvider } from "../lib/tanstackQueryProvider";
+import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
 
 export const metadata: Metadata = {
   title: "Autopilot Dataset Explorer",

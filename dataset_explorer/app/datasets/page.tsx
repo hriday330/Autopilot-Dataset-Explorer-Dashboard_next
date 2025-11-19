@@ -2,18 +2,18 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "../../components/AuthProvider";
-import { Button } from "../../components/ui/button";
-import DatasetImageGrid from "../../components/DatasetImageGrid";
+import { useUser } from "@components/AuthProvider";
+import { Button } from "@components/ui/button";
+import DatasetImageGrid from "@components/DatasetImageGrid";
 import { useDatasets } from "./hooks/useDatasets";
 import { useLoadImages } from "./hooks/useLoadImages";
 import { useUpdateImages } from "./hooks/useUpdateImages";
-import Spinner from "../../components/ui/spinner";
-import FileUploader from "../../components/ui/file-uploader";
-import { Alert, AlertDescription } from "../../components/ui/alert";
+import Spinner from "@components/ui/spinner";
+import FileUploader from "@components/ui/file-uploader";
+import { Alert, AlertDescription } from "@components/ui/alert";
 import DatasetSelector from "@components/DatasetSelector";
-import { Progress } from "../../components/ui/progress";
-import DatasetCreation from "../../components/DatasetCreation";
+import { Progress } from "@components/ui/progress";
+import DatasetCreation from "@components/DatasetCreation";
 
 export default function DatasetsPage() {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "../../../lib/supabaseServer";
+import { supabaseServer } from "@lib/supabaseServer";
 import JSZip from "jszip";
 import pLimit from "p-limit";
 import sharp from "sharp";
