@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { fetchDatasetsAction, type Dataset } from "@lib/actions/dataset";
+import { type Dataset } from "@lib/actions/dataset";
 
 export function useDatasets() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -13,7 +13,9 @@ export function useDatasets() {
     if (!userId) return;
     setMessage(null);
     const task = (async () => {
-      const result = await fetchDatasetsAction(userId);
+      const res = await fetch(`/api/datasets/${userId}`);
+      const result = await res.json();
+
       if (result.error) {
         setMessage(`Error: ${result.error}`);
         setDatasets([]);

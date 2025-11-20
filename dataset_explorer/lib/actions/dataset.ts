@@ -1,8 +1,6 @@
 "use server";
-
 import { supabaseServer } from "@lib/supabaseServer";
 import { revalidatePath } from "next/cache";
-
 export interface Dataset {
   id: string;
   name: string;
@@ -27,38 +25,6 @@ export interface FetchImagesResult {
   error?: string;
 }
 
-// Fetch all datasets for a user
-export async function fetchDatasetsAction(userId: string): Promise<FetchDatasetsResult> {
-  try {
-    const { data: dsData, error: dsError } = await supabaseServer
-      .from('datasets')
-      .select('id,name,created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (dsError) throw dsError;
-
-    const countsMap: Record<string, number> = {};
-    const dsList = (dsData ?? []).map((d: any) => ({ id: d.id, name: d.name, created_at: d.created_at }));
-
-    // For each dataset, count images
-    for (const d of dsList) {
-      try {
-        const { count, error: countErr } = await supabaseServer
-          .from('images')
-          .select('id', { count: 'exact', head: true })
-          .eq('dataset_id', d.id);
-        countsMap[d.id] = countErr ? 0 : (count ?? 0);
-      } catch (e) {
-        countsMap[d.id] = 0;
-      }
-    }
-
-    return { datasets: dsList, counts: countsMap };
-  } catch (err: any) {
-    return { datasets: [], counts: {}, error: err?.message ?? String(err) };
-  }
-}
 
 // Fetch paginated images for a dataset
 export async function fetchImagesForDatasetAction(
