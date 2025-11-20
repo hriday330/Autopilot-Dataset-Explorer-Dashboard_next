@@ -57,7 +57,6 @@ export default function Page() {
   useEffect(() => {
     if (!selectedDatasetId) return;
     loadImagesForDataset(selectedDatasetId, currentPage, PAGE_SIZE);
-    setCurrentFrame(0); // reset frame index when dataset or page changes
   }, [selectedDatasetId, currentPage]);
 
   useEffect(() => {
