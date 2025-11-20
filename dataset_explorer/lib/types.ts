@@ -15,6 +15,8 @@ export interface Dataset {
 
 export interface ImageThumbnail {
   id: string;
+  width?: number;
+  height?: number;
   url: string;
   storage_path: string;
 }
