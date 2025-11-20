@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import type { BoundingBox } from "@lib/types";
 import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
 import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
+import { useFrameNavigation } from "@hooks/useFrameNavigation";
 
 const PAGE_SIZE = 12;
 
@@ -60,25 +61,15 @@ export default function Page() {
 
   const totalFrames = imagesTotal;
 
-  const handleNextFrame = () => {
-  if (currentFrame < thumbnails.length - 1) {
-    setCurrentFrame(currentFrame + 1);
-  } else {
-    // reached end of this page → load next page
-    setCurrentPage((prev) => prev + 1);
-    setCurrentFrame(0);
-  }
-};
+  const { handleNextFrame, handlePrevFrame } = useFrameNavigation({
+      currentFrame,
+      setCurrentFrame,
+      currentPage,
+      setCurrentPage,
+      thumbnailsLength: thumbnails.length,
+      pageSize: PAGE_SIZE,
+    });
 
-  const handlePrevFrame = () => {
-    if (currentFrame > 0) {
-      setCurrentFrame(currentFrame - 1);
-    } else if (currentPage > 1) {
-      // go to previous page’s last frame
-      setCurrentPage((prev) => prev - 1);
-      setCurrentFrame(PAGE_SIZE - 1);
-    }
-  };
 
   const handleExportData = () => {
     const exportData = {
