@@ -1,29 +1,15 @@
 "use client";
 
-import { Box, Tag, Layers, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, CheckCircle2, Circle } from "lucide-react";
+import { Box, Tag, Layers } from "lucide-react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { useState } from "react";
-
-interface BoundingBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
-
 interface SidebarProps {
   selectedLabel: string;
   onLabelSelect: (label: string) => void;
-  frames: any[];
-  boxes: Record<number, BoundingBox[]>;
-  currentFrame: number;
-  onFrameSelect: (frame: number) => void;
 }
 
-export function Sidebar({ selectedLabel, onLabelSelect, frames, boxes, currentFrame, onFrameSelect }: SidebarProps) {
+export function Sidebar({ selectedLabel, onLabelSelect}: SidebarProps) {
   const [activeLabels, setActiveLabels] = useState<string[]>(["Pedestrian", "Car"]);
   const [activeTool, setActiveTool] = useState("Bounding Box");
 
@@ -58,10 +44,6 @@ export function Sidebar({ selectedLabel, onLabelSelect, frames, boxes, currentFr
   const handleLabelClick = (labelName: string) => {
     toggleLabel(labelName);
     onLabelSelect(labelName);
-  };
-
-  const isFrameLabeled = (frameId: number) => {
-    return boxes[frameId] && boxes[frameId].length > 0;
   };
 
   return (
@@ -122,43 +104,6 @@ export function Sidebar({ selectedLabel, onLabelSelect, frames, boxes, currentFr
         </div>
       </div>
 
-      {/* Frame List */}
-      <div className="p-4 border-b border-[#1F1F1F]">
-        <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Frames</h3>
-        <div className="space-y-1">
-          {frames.map((frame, index) => {
-            const labeled = isFrameLabeled(frame.id);
-            const isCurrent = currentFrame === index;
-            const labelCount = boxes[frame.id]?.length || 0;
-            
-            return (
-              <button
-                key={frame.id}
-                onClick={() => onFrameSelect(index)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
-                  isCurrent 
-                    ? "bg-[#E82127] text-white" 
-                    : "hover:bg-[#1F1F1F] text-[#E5E5E5]"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {labeled ? (
-                    <CheckCircle2 className={`w-4 h-4 ${isCurrent ? "text-white" : "text-[#E82127]"}`} />
-                  ) : (
-                    <Circle className={`w-4 h-4 ${isCurrent ? "text-white" : "text-[#A3A3A3]"}`} />
-                  )}
-                  <span className="text-sm">Frame {index + 1}</span>
-                </div>
-                {labelCount > 0 && (
-                  <span className={`text-xs ${isCurrent ? "text-white/80" : "text-[#A3A3A3]"}`}>
-                    {labelCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Keyboard Shortcuts */}
       <div className="p-4 flex-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Clock, User, Download, Trash2, Tag, BarChart3 } from "lucide-react";
+import { Bell, Clock, User, Download, Trash2, Tag, BarChart3, FolderOpen } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -76,16 +76,20 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
         </Button>
 
         <div className="w-px h-8 bg-[#1F1F1F]"></div>
-        
+        <Link href="/datasets">
+          <Button
+            variant="outline"
+            className="bg-transparent border-[#1F1F1F] hover:bg-[#1F1F1F] text-[#A3A3A3] hover:text-[#E5E5E5] text-sm h-9 px-3 flex items-center gap-2"
+          >
+            <FolderOpen className="w-4 h-4" />
+            Your Datasets
+          </Button>
+        </Link>
         <button className="relative p-2 hover:bg-[#1F1F1F] rounded-lg transition-colors">
           <Bell className="w-5 h-5 text-[#A3A3A3]" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#E82127] rounded-full"></span>
         </button>
         
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#0E0E0E] border border-[#1F1F1F] rounded-lg">
-          <Clock className="w-4 h-4 text-[#A3A3A3]" />
-          <span className="text-sm text-[#E5E5E5]">{currentTime}</span>
-        </div>
         
         {/* Profile: show sign-in button if not signed in */}
         {loading ? (

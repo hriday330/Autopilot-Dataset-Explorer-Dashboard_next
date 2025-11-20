@@ -3,22 +3,13 @@
 import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useRef, useEffect } from "react";
-
-interface BoundingBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
-
+import type { BoundingBox } from "@lib/types";
 interface Frame {
-  id: number;
+  id: string;
   url: string;
-  speed: string;
-  timestamp: string;
-  confidence: string;
+  speed?: string;
+  timestamp?: string;
+  confidence?: string;
 }
 
 interface ImageViewerProps {
@@ -28,8 +19,8 @@ interface ImageViewerProps {
   selectedLabel: string;
   onPrevFrame: () => void;
   onNextFrame: () => void;
-  boxes: Record<number, BoundingBox[]>;
-  setBoxes: React.Dispatch<React.SetStateAction<Record<number, BoundingBox[]>>>;
+  boxes: Record<string, BoundingBox[]>;
+  setBoxes: React.Dispatch<React.SetStateAction<Record<string, BoundingBox[]>>>;
 }
 
 export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, onPrevFrame, onNextFrame, boxes, setBoxes }: ImageViewerProps) {

@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import {
   createDatasetAction,
-  deleteImageAction,
-  type ImageThumbnail,
-} from "../actions";
+  deleteImageAction
+} from "@lib/actions/dataset";
 import { supabase } from "@lib/supabaseClient";
 import { uploadWithProgress } from "@lib/uploadWithProgress";
+import { ImageThumbnail } from "@lib/types";
 
 interface ImageOperationsHandlers {
   onDeleteComplete?: () => void;

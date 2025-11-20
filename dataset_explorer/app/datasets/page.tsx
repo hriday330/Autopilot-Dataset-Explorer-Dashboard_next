@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@components/AuthProvider";
 import { Button } from "@components/ui/button";
 import DatasetImageGrid from "@components/DatasetImageGrid";
-import { useDatasets } from "./hooks/useDatasets";
-import { useLoadImages } from "./hooks/useLoadImages";
-import { useUpdateImages } from "./hooks/useUpdateImages";
+import { useDatasets } from "@hooks/useDatasets";
+import { useLoadImages } from "@hooks/useLoadImages";
+import { useUpdateImages } from "@hooks/useUpdateImages";
 import Spinner from "@components/ui/spinner";
 import FileUploader from "@components/ui/file-uploader";
 import { Alert, AlertDescription } from "@components/ui/alert";
@@ -57,6 +57,7 @@ export default function DatasetsPage() {
       loadDatasets(user?.id || "", selected);
     },
     onUploadComplete: () => {
+      cache.invalidate(selected)
       loadDatasets(user?.id || "", selected);
       loadImagesForDataset(selected, 1, imagesPerPage);
     },
@@ -178,7 +179,12 @@ export default function DatasetsPage() {
         )}
 
         <div className="mt-6">
-          <Button variant="outline" className="border-[#1F1F1F] text-[#A3A3A3]" onClick={() => router.push('/')}>Back to dashboard</Button>
+          <Button
+            variant="outline" 
+            className="border-[#1F1F1F] text-[#A3A3A3]" 
+            onClick={() => router.push(`/?dataset=${selected}`)}>
+            Annotate this dataset
+            </Button>
         </div>
         </>}
       </div>

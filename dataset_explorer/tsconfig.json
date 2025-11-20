@@ -27,6 +27,7 @@
       "@lib/*": ["lib/*"],
       "@styles/*": ["styles/*"],
       "@pages/*": ["pages/*"],
+      "@hooks/*": ["hooks/*"]
     }
   },
   "include": [
