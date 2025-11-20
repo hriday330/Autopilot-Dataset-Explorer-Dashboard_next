@@ -1,16 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-
-interface BoundingBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
-
+import type { BoundingBox } from "@lib/types";
 interface AnalyticsPanelProps {
   boxes: Record<string, BoundingBox[]>;
   frames: any[];

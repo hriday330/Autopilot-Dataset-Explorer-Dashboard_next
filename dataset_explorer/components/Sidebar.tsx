@@ -1,19 +1,9 @@
 "use client";
 
-import { Box, Tag, Layers, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, CheckCircle2, Circle } from "lucide-react";
+import { Box, Tag, Layers } from "lucide-react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { useState } from "react";
-
-interface BoundingBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
-
 interface SidebarProps {
   selectedLabel: string;
   onLabelSelect: (label: string) => void;

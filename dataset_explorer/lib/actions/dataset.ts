@@ -2,19 +2,7 @@
 
 import { supabaseServer } from "@lib/supabaseServer";
 import { revalidatePath } from "next/cache";
-
-export interface Dataset {
-  id: string;
-  name: string;
-  created_at?: string;
-}
-
-export interface ImageThumbnail {
-  id: string;
-  url: string;
-  storage_path: string;
-}
-
+import type { Dataset, ImageThumbnail } from "@lib/types";
 export interface FetchDatasetsResult {
   datasets: Dataset[];
   counts: Record<string, number>;

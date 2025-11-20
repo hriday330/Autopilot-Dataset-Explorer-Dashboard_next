@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { fetchDatasetsAction, type Dataset } from "@lib/actions/dataset";
+import { fetchDatasetsAction } from "@lib/actions/dataset";
+import type { Dataset } from "@lib/types";
 
 export function useDatasets() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);

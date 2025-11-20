@@ -10,15 +10,7 @@ import { useLoadImages } from "@hooks/useLoadImages";
 import { useDatasets } from "@hooks/useDatasets";
 import { useUser } from "@components/AuthProvider";
 import { useSearchParams } from "next/navigation";
-
-interface BoundingBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
+import type { BoundingBox } from "@lib/types";
 
 const PAGE_SIZE = 12;
 

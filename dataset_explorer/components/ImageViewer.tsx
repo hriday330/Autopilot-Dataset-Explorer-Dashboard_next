@@ -3,16 +3,7 @@
 import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useRef, useEffect } from "react";
-
-interface BoundingBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
-
+import type { BoundingBox } from "@lib/types";
 interface Frame {
   id: string;
   url: string;
