@@ -11,6 +11,8 @@ import { useDatasets } from "@hooks/useDatasets";
 import { useUser } from "@components/AuthProvider";
 import { useSearchParams } from "next/navigation";
 import type { BoundingBox } from "@lib/types";
+import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
+import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 
 const PAGE_SIZE = 12;
 
@@ -20,7 +22,7 @@ export default function Page() {
   const [boxes, setBoxes] = useState<Record<string, BoundingBox[]>>({});
   const [currentView, setCurrentView] = useState<"labeling" | "analytics">("labeling");
 
-  const {user} = useUser();
+  const { user } = useUser();
   const { datasets, loadDatasets } = useDatasets();
   const { thumbnails, imagesTotal, loadImagesForDataset } = useLoadImages();
 
@@ -30,19 +32,19 @@ export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  // If URL provided dataset, use it 
-  if (datasetFromUrl) {
-    setSelectedDatasetId(datasetFromUrl);
-    loadDatasets(user.id); // still load all datasets
-    return;
-  }
+    // If URL provided dataset, use it 
+    if (datasetFromUrl) {
+      setSelectedDatasetId(datasetFromUrl);
+      loadDatasets(user.id); // still load all datasets
+      return;
+    }
 
-  // Else auto-select first dataset
-  loadDatasets(user.id, undefined, (firstId) => {
-    setSelectedDatasetId(firstId);
-  });
+    // Else auto-select first dataset
+    loadDatasets(user.id, undefined, (firstId) => {
+      setSelectedDatasetId(firstId);
+    });
 }, [user]);
 
 
@@ -51,51 +53,9 @@ export default function Page() {
     loadImagesForDataset(selectedDatasetId, currentPage, PAGE_SIZE);
   }, [selectedDatasetId, currentPage]);
 
-  useEffect(() => {
-    const img = thumbnails[currentFrame];
-    if (!img) return;
+  useLoadAnnotations(thumbnails, currentFrame, setBoxes);
+  useAutosaveAnnotations(thumbnails, currentFrame, boxes, user);
 
-    async function loadAnnotations() {
-      try {
-        const res = await fetch(`/api/annotations/${img.id}`, { cache: "no-store" });
-        const data = await res.json();
-
-        setBoxes((prev) => ({
-          ...prev,
-          [img.id]: data.annotations || [],
-        }));
-      } catch (err) {
-        console.error("Error loading annotations:", err);
-      }
-    }
-
-    loadAnnotations();
-  }, [currentFrame, thumbnails]);
-
-  useEffect(() => {
-  const img = thumbnails[currentFrame];
-  if (!img || !user) return;
-
-  async function save() {
-    const payload = {
-      boxes: boxes[img.id] || [],
-      userId: user?.id,
-    };
-
-    try {
-      await fetch(`/api/annotations/${img.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch (err) {
-      console.error("Autosave error:", err);
-    }
-  }
-
-  const timer = setTimeout(save, 300);
-  return () => clearTimeout(timer);
-}, [boxes, currentFrame, thumbnails, user]);
 
 
   const totalFrames = imagesTotal;
