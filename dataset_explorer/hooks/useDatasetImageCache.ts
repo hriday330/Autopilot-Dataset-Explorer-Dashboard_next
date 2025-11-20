@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import type { ImageThumbnail } from "@lib/actions";
+import type { ImageThumbnail } from "@lib/actions/dataset";
 
 type CacheEntry = {
   thumbnails: ImageThumbnail[];

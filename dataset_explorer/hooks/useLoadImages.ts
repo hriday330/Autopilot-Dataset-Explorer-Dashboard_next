@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { fetchImagesForDatasetAction, type ImageThumbnail } from "@lib/actions";
+import { fetchImagesForDatasetAction, type ImageThumbnail } from "@lib/actions/dataset";
 import { useDatasetImageCache } from "./useDatasetImageCache";
 
 export function useLoadImages() {
