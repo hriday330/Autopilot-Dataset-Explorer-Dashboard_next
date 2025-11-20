@@ -12,7 +12,7 @@ interface BoundingBox {
 }
 
 interface AnalyticsPanelProps {
-  boxes: Record<number, BoundingBox[]>;
+  boxes: Record<string, BoundingBox[]>;
   frames: any[];
 }
 
@@ -56,7 +56,7 @@ export function AnalyticsPanel({ boxes, frames }: AnalyticsPanelProps) {
     .slice(0, 10);
 
   const totalLabels = Object.values(labelCounts).reduce((sum, count) => sum + count, 0);
-  const labeledFramesCount = Object.keys(boxes).filter(key => boxes[parseInt(key)].length > 0).length;
+  const labeledFramesCount = Object.keys(boxes).filter(key => boxes[key].length > 0).length;
   const avgLabelsPerFrame = labeledFramesCount > 0 ? (totalLabels / labeledFramesCount).toFixed(1) : 0;
 
   return (

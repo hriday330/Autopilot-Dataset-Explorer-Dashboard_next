@@ -60,19 +60,51 @@ export default function Page() {
   }, [selectedDatasetId, currentPage]);
 
   useEffect(() => {
-    const savedLabels = localStorage.getItem("autopilot-labels");
-    if (savedLabels) {
+    const img = thumbnails[currentFrame];
+    if (!img) return;
+
+    async function loadAnnotations() {
       try {
-        setBoxes(JSON.parse(savedLabels));
-      } catch (error) {
-        console.error("Error loading saved labels:", error);
+        const res = await fetch(`/api/annotations/${img.id}`, { cache: "no-store" });
+        const data = await res.json();
+
+        setBoxes((prev) => ({
+          ...prev,
+          [img.id]: data.annotations || [],
+        }));
+      } catch (err) {
+        console.error("Error loading annotations:", err);
       }
     }
-  }, []);
+
+    loadAnnotations();
+  }, [currentFrame, thumbnails]);
 
   useEffect(() => {
-    localStorage.setItem("autopilot-labels", JSON.stringify(boxes));
-  }, [boxes]);
+  const img = thumbnails[currentFrame];
+  if (!img || !user) return;
+
+  async function save() {
+    const payload = {
+      boxes: boxes[img.id] || [],
+      userId: user?.id,
+    };
+
+    try {
+      await fetch(`/api/annotations/${img.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error("Autosave error:", err);
+    }
+  }
+
+  const timer = setTimeout(save, 300);
+  return () => clearTimeout(timer);
+}, [boxes, currentFrame, thumbnails, user]);
+
 
   const totalFrames = imagesTotal;
 
@@ -96,21 +128,15 @@ export default function Page() {
     }
   };
 
-
-  //
-  // ────────────────────────────────────────────────────────────────
-  //  EXPORT (STILL USING BOXES + THUMBNAILS)
-  // ────────────────────────────────────────────────────────────────
-  //
   const handleExportData = () => {
     const exportData = {
       exportDate: new Date().toISOString(),
       totalFrames,
-      labeledFrames: Object.keys(boxes).filter((key) => boxes[parseInt(key)].length > 0).length,
+      labeledFrames: Object.keys(boxes).filter((key) => boxes[key].length > 0).length,
       frames: thumbnails.map((img, index) => ({
         frameId: index,
         imageUrl: img.url,
-        metadata: {}, // You may add metadata later if needed
+        metadata: {}, // TODO: add metadata later if needed
         annotations: boxes[index] || [],
       })),
     };
@@ -128,11 +154,10 @@ export default function Page() {
   const handleClearData = () => {
     if (window.confirm("Are you sure you want to clear all labels? This cannot be undone.")) {
       setBoxes({});
-      localStorage.removeItem("autopilot-labels");
     }
   };
 
-  const labeledFramesCount = Object.keys(boxes).filter((key) => boxes[parseInt(key)].length > 0).length;
+  const labeledFramesCount = Object.keys(boxes).filter((key) => boxes[key].length > 0).length;
 
   const absoluteFrameNumber = (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
 
