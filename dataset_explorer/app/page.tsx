@@ -72,27 +72,32 @@ export default function Page() {
 
 
    // TODO: move export logic server-side 
-  const handleExportData = () => {
-    const exportData = {
-      exportDate: new Date().toISOString(),
-      totalFrames,
-      labeledFrames: Object.keys(boxes).filter((key) => boxes[key].length > 0).length,
-      frames: thumbnails.map((img, index) => ({
-        frameId: index,
-        imageUrl: img.url,
-        metadata: {}, // TODO: add metadata later if needed
-        annotations: boxes[index] || [],
-      })),
-    };
+    const handleExportData = async () => {
+      const payload = {
+        thumbnails,
+        boxes,
+      };
 
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `autopilot-dataset-${new Date().toISOString().split("T")[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+      const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.error("Export failed");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `autopilot-dataset-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+
+      URL.revokeObjectURL(url);
   };
 
   const handleClearData = () => {
