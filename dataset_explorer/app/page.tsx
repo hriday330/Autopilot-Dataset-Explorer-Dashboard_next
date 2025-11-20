@@ -5,7 +5,7 @@ import { Sidebar } from "@components/Sidebar";
 import { ImageViewer } from "@components/ImageViewer";
 import { AnalyticsPanel } from "@components/AnalyticsPanel";
 import { DashboardFooter } from "@components/DashboardFooter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useDatasets } from "@hooks/useDatasets";
 import { useUser } from "@components/AuthProvider";
@@ -17,14 +17,14 @@ import { useFrameNavigation } from "@hooks/useFrameNavigation";
 
 const PAGE_SIZE = 12;
 
-export default function Page() {
+function DashboardContent() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [selectedLabel, setSelectedLabel] = useState("Pedestrian");
   const [boxes, setBoxes] = useState<Record<string, BoundingBox[]>>({});
   const [currentView, setCurrentView] = useState<"labeling" | "analytics">("labeling");
 
   const { user } = useUser();
-  const { datasets, loadDatasets } = useDatasets();
+  const { loadDatasets } = useDatasets();
   const { thumbnails, imagesTotal, loadImagesForDataset } = useLoadImages();
 
   const searchParams = useSearchParams();
@@ -46,8 +46,7 @@ export default function Page() {
     loadDatasets(user.id, undefined, (firstId) => {
       setSelectedDatasetId(firstId);
     });
-}, [user]);
-
+  }, [user]);
 
   useEffect(() => {
     if (!selectedDatasetId) return;
@@ -57,47 +56,43 @@ export default function Page() {
   useLoadAnnotations(thumbnails, currentFrame, setBoxes);
   useAutosaveAnnotations(thumbnails, currentFrame, boxes, user);
 
-
-
   const totalFrames = imagesTotal;
 
   const { handleNextFrame, handlePrevFrame } = useFrameNavigation({
-      currentFrame,
-      setCurrentFrame,
-      currentPage,
-      setCurrentPage,
-      thumbnailsLength: thumbnails.length,
-      pageSize: PAGE_SIZE,
+    currentFrame,
+    setCurrentFrame,
+    currentPage,
+    setCurrentPage,
+    thumbnailsLength: thumbnails.length,
+    pageSize: PAGE_SIZE,
+  });
+
+  const handleExportData = async () => {
+    const payload = {
+      thumbnails,
+      boxes,
+    };
+
+    const res = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
+    if (!res.ok) {
+      console.error("Export failed");
+      return;
+    }
 
-   // TODO: move export logic server-side 
-    const handleExportData = async () => {
-      const payload = {
-        thumbnails,
-        boxes,
-      };
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
 
-      const res = await fetch("/api/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `autopilot-dataset-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
 
-      if (!res.ok) {
-        console.error("Export failed");
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `autopilot-dataset-${new Date().toISOString().split("T")[0]}.json`;
-      a.click();
-
-      URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url);
   };
 
   const handleClearData = () => {
@@ -107,7 +102,6 @@ export default function Page() {
   };
 
   const labeledFramesCount = Object.keys(boxes).filter((key) => boxes[key].length > 0).length;
-
   const absoluteFrameNumber = (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
 
   return (
@@ -129,7 +123,7 @@ export default function Page() {
           {currentView === "labeling" ? (
             thumbnails.length > 0 ? (
               <ImageViewer
-                frame={thumbnails[currentFrame]} // 🔥 replaced static frame
+                frame={thumbnails[currentFrame]}
                 frameNumber={absoluteFrameNumber}
                 totalFrames={totalFrames}
                 selectedLabel={selectedLabel}
@@ -149,5 +143,17 @@ export default function Page() {
 
       <DashboardFooter labeledCount={labeledFramesCount} totalCount={totalFrames} />
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center bg-[#0E0E0E]">
+        <div className="text-[#A3A3A3]">Loading dashboard...</div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
