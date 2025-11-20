@@ -25,6 +25,53 @@ export interface FetchImagesResult {
   error?: string;
 }
 
+
+// Fetch paginated images for a dataset
+export async function fetchImagesForDatasetAction(
+  datasetId: string,
+  page: number,
+  perPage: number
+): Promise<FetchImagesResult> {
+  try {
+    const from = (page - 1) * perPage;
+    const to = from + perPage - 1;
+
+    const { data, error, count } = await supabaseServer
+      .from('images')
+      .select('id,storage_path,created_at', { count: 'exact' })
+      .eq('dataset_id', datasetId)
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return { thumbnails: [], total: count ?? 0 };
+    }
+
+    // Generate signed URLs for thumbnails
+    const thumbs: ImageThumbnail[] = [];
+    for (const img of data) {
+      try {
+        const path = img.storage_path;
+        const signed = await supabaseServer.storage.from('datasets').createSignedUrl(path, 3600); // 1 hour
+        let url = '';
+        if ((signed as any).data?.signedUrl) url = (signed as any).data.signedUrl;
+        else if ((signed as any).data?.signedURL) url = (signed as any).data.signedURL;
+        else if ((signed as any).publicURL) url = (signed as any).publicURL;
+        else if ((signed as any).data?.publicUrl) url = (signed as any).data.publicUrl;
+        thumbs.push({ id: img.id, url, storage_path: path });
+      } catch (e) {
+        thumbs.push({ id: img.id, url: '', storage_path: img.storage_path });
+      }
+    }
+
+    return { thumbnails: thumbs, total: count ?? 0 };
+  } catch (err: any) {
+    return { thumbnails: [], total: 0, error: err?.message ?? String(err) };
+  }
+}
+
 // Create a new dataset
 export async function createDatasetAction(name: string, userId: string) {
   try {

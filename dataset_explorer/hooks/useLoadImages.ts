@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { type ImageThumbnail } from "@lib/actions/dataset";
+import { fetchImagesForDatasetAction, type ImageThumbnail } from "@lib/actions/dataset";
 import { useDatasetImageCache } from "./useDatasetImageCache";
 
 export function useLoadImages() {
@@ -20,12 +20,11 @@ export function useLoadImages() {
     if (cache.hasPage(datasetId, page)) return; 
 
     try {
-      const res = await fetch(
-        `/api/images/${datasetId}?page=${page}&perPage=${perPage}`,
-        { cache: "no-store" }
+      const result = await fetchImagesForDatasetAction(
+        datasetId,
+        page,
+        perPage
       );
-
-      const result = await res.json();
 
       if (!result.error) {
         cache.setCachedPage(datasetId, page, result.thumbnails, result.total);
@@ -53,12 +52,7 @@ export function useLoadImages() {
 
     setThumbnails([]);
     startTransition(async () => {
-      const res = await fetch(
-        `/api/images/${datasetId}?page=${page}&perPage=${perPage}`,
-        { cache: "no-store" }
-      );
-
-      const result = await res.json();
+      const result = await fetchImagesForDatasetAction(datasetId, page, perPage);
       if (result.error) {
         setMessage(`Error loading images: ${result.error}`);
         setThumbnails([]);
