@@ -1,27 +1,37 @@
 import { supabase } from "@lib/supabaseClient";
 import { Label } from "@lib/types";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 export function useLabelClasses(datasetId: string | null) {
+  const requestRef = useRef(0);
+
   const [labels, setLabels] = useState<Label[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadLabels = useCallback(async () => {
     if (!datasetId) return;
+
+    const reqId = ++requestRef.current;
+
     setLoading(true);
     setError(null);
 
     const { data, error } = await supabase
-      .from("label_classes")
-      .select("*")
-      .eq("dataset_id", datasetId)
-      .order("order_index");
+        .from("label_classes")
+        .select("*")
+        .eq("dataset_id", datasetId)
+        .order("order_index");
+
+    if (reqId !== requestRef.current) {
+        // ignore out-of-date response
+        return;
+    }
 
     if (error) {
-      setError(error.message);
+        setError(error.message);
     } else {
-      setLabels(data || []);
+        setLabels(data || []);
     }
 
     setLoading(false);
@@ -112,6 +122,8 @@ export function useLabelClasses(datasetId: string | null) {
     setError(annErr.message);
     return;
     }
+
+    setLabels(prev => prev.filter(l => l.id !== labelId));
 
     // 2) delete the label class
     const { error: labelErr } = await supabase
