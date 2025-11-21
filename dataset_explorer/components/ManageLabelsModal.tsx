@@ -23,6 +23,8 @@ import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Label } from "@lib/types";
 import { GripVertical, Trash2, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { HexColorPicker } from "react-colorful";
 
 interface ManageLabelsModalProps {
   open: boolean;
@@ -52,6 +54,8 @@ function SortableLabelRow({
     transition,
   };
 
+  const [open, setOpen] = useState(false);
+
   return (
     <div
       ref={setNodeRef}
@@ -66,6 +70,27 @@ function SortableLabelRow({
       >
         <GripVertical className="w-4 h-4" />
       </button>
+
+      {/* Color Picker */}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            className="w-5 h-5 rounded-full border border-[#333]"
+            style={{ backgroundColor: label.color ?? "#ffffff" }}
+          />
+        </PopoverTrigger>
+
+        <PopoverContent
+          side="right"
+          className="bg-[#0E0E0E] border border-[#1F1F1F] p-3 rounded-lg"
+        >
+          <HexColorPicker
+            color={label.color ?? "#ffffff"}
+            onChange={(newColor) => updateLabel(label.id, { color: newColor })}
+            className="color-picker"
+          />
+        </PopoverContent>
+      </Popover>
 
       {/* Editable name */}
       <Input

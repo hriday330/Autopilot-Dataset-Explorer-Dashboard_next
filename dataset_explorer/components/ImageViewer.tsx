@@ -63,12 +63,13 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
     const height = y - startPoint.y;
     
     setCurrentBox({
-      id: Date.now().toString(),
+      id: getLabelName(selectedLabel),
       x: width > 0 ? startPoint.x : x,
       y: height > 0 ? startPoint.y : y,
       width: Math.abs(width),
       height: Math.abs(height),
-      label: getLabelName(selectedLabel)
+      label: selectedLabel
+      
     });
   };
 
@@ -163,7 +164,7 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
               className="absolute -top-6 left-0 px-2 py-0.5 rounded text-xs text-white flex items-center gap-1"
               style={{ backgroundColor: getLabelColor(box.label) }}
             >
-              {box.label}
+              {getLabelName(box.label)}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
