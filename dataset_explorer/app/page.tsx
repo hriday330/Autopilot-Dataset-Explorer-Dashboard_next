@@ -16,6 +16,7 @@ import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 import { useFrameNavigation } from "@hooks/useFrameNavigation";
 import { useLabelClasses } from "@hooks/useLabelClasses";
 import { ManageLabelsModal } from "@components/ManageLabelsModal";
+import Spinner from "@components/ui/spinner";
 
 
 const PAGE_SIZE = 12;
@@ -27,8 +28,8 @@ function DashboardContent() {
   const [currentView, setCurrentView] = useState<"labeling" | "analytics">("labeling");
 
   const { user } = useUser();
-  const { loadDatasets } = useDatasets();
-  const { thumbnails, imagesTotal, loadImagesForDataset } = useLoadImages();
+  const { loadDatasets, isPending: isDatasetsPending } = useDatasets();
+  const { thumbnails, imagesTotal, loadImagesForDataset, isPending: isImagesPending } = useLoadImages();
 
   const searchParams = useSearchParams();
   const datasetFromUrl = searchParams.get("dataset"); 
@@ -178,7 +179,9 @@ function DashboardContent() {
                 boxes={boxes}
                 setBoxes={setBoxes}
               />
-            ) : (
+            ) : isImagesPending || isDatasetsPending 
+              ?  <div className="text-center text-[#A3A3A3] mt-20"><Spinner text="Loading your datasets"/></div>
+              : (
               <div className="text-center text-[#A3A3A3] mt-20">No images in this dataset</div>
             )
           ) : (
