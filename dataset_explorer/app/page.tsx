@@ -54,7 +54,7 @@ function DashboardContent() {
   }, [selectedDatasetId, currentPage]);
 
   useLoadAnnotations(thumbnails, currentFrame, setBoxes);
-  useAutosaveAnnotations(thumbnails, currentFrame, boxes, user);
+  const { waitForSave } = useAutosaveAnnotations(thumbnails, currentFrame, boxes, user);
 
   const totalFrames = imagesTotal;
 
@@ -68,6 +68,8 @@ function DashboardContent() {
   });
 
   const handleExportData = async () => {
+
+    await waitForSave();
     const payload = {
       thumbnails,
       boxes,
