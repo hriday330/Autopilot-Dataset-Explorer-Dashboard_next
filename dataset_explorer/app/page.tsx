@@ -5,7 +5,7 @@ import { Sidebar } from "@components/Sidebar";
 import { ImageViewer } from "@components/ImageViewer";
 import { AnalyticsPanel } from "@components/AnalyticsPanel";
 import { DashboardFooter } from "@components/DashboardFooter";
-import { useState, useEffect, Suspense, use } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useDatasets } from "@hooks/useDatasets";
 import { useUser } from "@components/AuthProvider";
