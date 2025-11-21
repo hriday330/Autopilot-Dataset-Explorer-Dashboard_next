@@ -16,7 +16,7 @@ import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 import { useFrameNavigation } from "@hooks/useFrameNavigation";
 import { useLabelClasses } from "@hooks/useLabelClasses";
 import { ManageLabelsModal } from "@components/ManageLabelsModal";
-import { Button } from "@components/ui/button";
+
 
 const PAGE_SIZE = 12;
 
@@ -156,6 +156,7 @@ function DashboardContent() {
           {currentView === "labeling" ? (
             thumbnails.length > 0 ? (
               <ImageViewer
+                labels={labels}
                 frame={thumbnails[currentFrame]}
                 frameNumber={absoluteFrameNumber}
                 totalFrames={totalFrames}

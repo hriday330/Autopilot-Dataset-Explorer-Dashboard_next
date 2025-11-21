@@ -99,6 +99,7 @@ export function useLabelClasses(datasetId: string | null) {
     [loadLabels],
   );
 
+  // handle deleting annotations using the deleted label elsewhere if needed
   const deleteLabel = useCallback(
     async (labelId: string) => {
       const { error } = await supabase
