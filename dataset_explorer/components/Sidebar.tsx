@@ -4,13 +4,15 @@ import { Box, Tag, Layers } from "lucide-react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { useState } from "react";
+import { Label } from "@lib/types";
 interface SidebarProps {
-  selectedLabel: string;
-  onLabelSelect: (label: string) => void;
+  selectedLabelId: string;
+  onLabelIdSelect: (label: string) => void;
+  labels: Label[];
 }
 
-export function Sidebar({ selectedLabel, onLabelSelect}: SidebarProps) {
-  const [activeLabels, setActiveLabels] = useState<string[]>(["Pedestrian", "Car"]);
+export function Sidebar({ selectedLabelId, onLabelIdSelect, labels }: SidebarProps) {
+  const [activeLabels, setActiveLabels] = useState<string[]>(labels.map(l => l.id));
   const [activeTool, setActiveTool] = useState("Bounding Box");
 
   const labelingTools = [
@@ -19,36 +21,24 @@ export function Sidebar({ selectedLabel, onLabelSelect}: SidebarProps) {
     { name: "Bulk Label Mode", icon: Layers },
   ];
 
-  const labels = [
-    { id: "pedestrian", name: "Pedestrian" },
-    { id: "car", name: "Car" },
-    { id: "traffic-light", name: "Traffic Light" },
-    { id: "sign", name: "Sign" },
-  ];
-
   const shortcuts = [
     { keys: ["←", "→"], description: "Navigate frames" },
     { keys: ["↑", "↓"], description: "Select labels" },
-    { keys: ["1-4"], description: "Quick label" },
+    { keys: ["1-9"], description: "Quick label" },
     { keys: ["Space"], description: "Play/Pause" },
   ];
 
-  const toggleLabel = (labelName: string) => {
-    setActiveLabels(prev => 
-      prev.includes(labelName) 
-        ? prev.filter(l => l !== labelName)
-        : [...prev, labelName]
+  const toggleLabel = (id: string) => {
+    setActiveLabels(prev =>
+      prev.includes(id)
+        ? prev.filter(l => l !== id)
+        : [...prev, id]
     );
-  };
-
-  const handleLabelClick = (labelName: string) => {
-    toggleLabel(labelName);
-    onLabelSelect(labelName);
   };
 
   return (
     <aside className="w-[260px] bg-[#0E0E0E] border-r border-[#1F1F1F] flex flex-col">
-      {/* Labeling Tools */}
+      {/* Tools */}
       <div className="p-4 border-b border-[#1F1F1F]">
         <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Labeling Tools</h3>
         <div className="space-y-2">
@@ -60,8 +50,8 @@ export function Sidebar({ selectedLabel, onLabelSelect}: SidebarProps) {
                 key={tool.name}
                 variant={isActive ? "default" : "outline"}
                 className={`w-full justify-start gap-2 ${
-                  isActive 
-                    ? "bg-[#E82127] hover:bg-[#D01F25] text-white border-0" 
+                  isActive
+                    ? "bg-[#E82127] hover:bg-[#D01F25] text-white border-0"
                     : "bg-transparent hover:bg-[#1F1F1F] text-[#E5E5E5] border-[#1F1F1F]"
                 }`}
                 onClick={() => setActiveTool(tool.name)}
@@ -74,21 +64,27 @@ export function Sidebar({ selectedLabel, onLabelSelect}: SidebarProps) {
         </div>
       </div>
 
-      {/* Active Labels */}
+      {/* Labels */}
       <div className="p-4 border-b border-[#1F1F1F]">
         <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Active Labels</h3>
+
         <div className="space-y-3">
           {labels.map((label) => {
-            const isActive = activeLabels.includes(label.name);
-            const isSelected = selectedLabel === label.name;
+            const isActive = activeLabels.includes(label.id);
+            const isSelected = selectedLabelId === label.id;
+
             return (
               <div key={label.id} className="flex items-center gap-2">
                 <Checkbox
                   id={label.id}
                   checked={isActive}
-                  onCheckedChange={() => handleLabelClick(label.name)}
+                  onCheckedChange={() => {
+                    toggleLabel(label.id);
+                    onLabelIdSelect(label.id);
+                  }}
                   className={isActive ? "border-[#E82127] data-[state=checked]:bg-[#E82127]" : "border-[#1F1F1F]"}
                 />
+
                 <label
                   htmlFor={label.id}
                   className={`text-sm cursor-pointer ${
@@ -104,8 +100,7 @@ export function Sidebar({ selectedLabel, onLabelSelect}: SidebarProps) {
         </div>
       </div>
 
-
-      {/* Keyboard Shortcuts */}
+      {/* Shortcuts */}
       <div className="p-4 flex-1">
         <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Keyboard Shortcuts</h3>
         <div className="space-y-2">

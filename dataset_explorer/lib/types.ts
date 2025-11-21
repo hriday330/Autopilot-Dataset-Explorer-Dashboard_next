@@ -20,3 +20,12 @@ export interface ImageThumbnail {
   url: string;
   storage_path: string;
 }
+
+export interface Label {
+  id: string;          
+  dataset_id: string;  
+  name: string;        
+  color?: string;      
+  order_index?: number; 
+  created_at: string;  
+}

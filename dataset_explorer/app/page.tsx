@@ -5,7 +5,7 @@ import { Sidebar } from "@components/Sidebar";
 import { ImageViewer } from "@components/ImageViewer";
 import { AnalyticsPanel } from "@components/AnalyticsPanel";
 import { DashboardFooter } from "@components/DashboardFooter";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, use } from "react";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useDatasets } from "@hooks/useDatasets";
 import { useUser } from "@components/AuthProvider";
@@ -14,12 +14,13 @@ import type { BoundingBox } from "@lib/types";
 import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
 import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 import { useFrameNavigation } from "@hooks/useFrameNavigation";
+import { useLabelClasses } from "@hooks/useLabelClasses";
 
 const PAGE_SIZE = 12;
 
 function DashboardContent() {
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [selectedLabel, setSelectedLabel] = useState("Pedestrian");
+  const [selectedLabelId, setSelectedLabelId] = useState<string>("");
   const [boxes, setBoxes] = useState<Record<string, BoundingBox[]>>({});
   const [currentView, setCurrentView] = useState<"labeling" | "analytics">("labeling");
 
@@ -31,6 +32,14 @@ function DashboardContent() {
   const datasetFromUrl = searchParams.get("dataset"); 
   const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const labels = useLabelClasses(selectedDatasetId);
+
+  useEffect(() => {
+  if (labels.length > 0 && !selectedLabelId) {
+    setSelectedLabelId(labels[0].id);
+  }
+}, [labels]);
 
   useEffect(() => {
     if (!user) return;
@@ -117,8 +126,9 @@ function DashboardContent() {
 
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
-          selectedLabel={selectedLabel}
-          onLabelSelect={setSelectedLabel}
+          selectedLabelId={selectedLabelId}
+          labels={labels}
+          onLabelIdSelect={setSelectedLabelId}
         />
 
         <div className="flex-1 flex flex-col overflow-auto">
@@ -128,7 +138,7 @@ function DashboardContent() {
                 frame={thumbnails[currentFrame]}
                 frameNumber={absoluteFrameNumber}
                 totalFrames={totalFrames}
-                selectedLabel={selectedLabel}
+                selectedLabel={selectedLabelId}
                 onPrevFrame={handlePrevFrame}
                 onNextFrame={handleNextFrame}
                 boxes={boxes}
