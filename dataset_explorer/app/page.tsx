@@ -14,23 +14,42 @@ import type { BoundingBox } from "@lib/types";
 import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
 import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 import { useFrameNavigation } from "@hooks/useFrameNavigation";
+import { useLabelClasses } from "@hooks/useLabelClasses";
+import { ManageLabelsModal } from "@components/ManageLabelsModal";
+import Spinner from "@components/ui/spinner";
+
 
 const PAGE_SIZE = 12;
 
 function DashboardContent() {
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [selectedLabel, setSelectedLabel] = useState("Pedestrian");
+  const [selectedLabelId, setSelectedLabelId] = useState<string>("");
   const [boxes, setBoxes] = useState<Record<string, BoundingBox[]>>({});
   const [currentView, setCurrentView] = useState<"labeling" | "analytics">("labeling");
 
   const { user } = useUser();
-  const { loadDatasets } = useDatasets();
-  const { thumbnails, imagesTotal, loadImagesForDataset } = useLoadImages();
+  const { loadDatasets, isPending: isDatasetsPending } = useDatasets();
+  const { thumbnails, imagesTotal, loadImagesForDataset, isPending: isImagesPending } = useLoadImages();
 
   const searchParams = useSearchParams();
   const datasetFromUrl = searchParams.get("dataset"); 
   const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showManageLabels, setShowManageLabels] = useState(false);
+
+  const { 
+    labels, 
+    createLabel, 
+    updateLabel, 
+    reorderLabels, 
+    deleteLabel
+  }  = useLabelClasses(selectedDatasetId);
+
+  useEffect(() => {
+  if (labels.length > 0 && !selectedLabelId) {
+    setSelectedLabelId(labels[0].id);
+  }
+}, [labels]);
 
   useEffect(() => {
     if (!user) return;
@@ -54,7 +73,7 @@ function DashboardContent() {
   }, [selectedDatasetId, currentPage]);
 
   useLoadAnnotations(thumbnails, currentFrame, setBoxes);
-  useAutosaveAnnotations(thumbnails, currentFrame, boxes, user);
+  const { waitForSave } = useAutosaveAnnotations(thumbnails, currentFrame, boxes, user);
 
   const totalFrames = imagesTotal;
 
@@ -67,7 +86,21 @@ function DashboardContent() {
     pageSize: PAGE_SIZE,
   });
 
+  const handleLocalDeleteLabel = (labelId: string) => {
+  setBoxes(prev =>
+    Object.fromEntries(
+      Object.entries(prev).map(([imageId, arr]) => [
+        imageId,
+        arr.filter(box => box.label !== labelId),
+      ])
+    )
+  );
+};
+
+
   const handleExportData = async () => {
+
+    await waitForSave();
     const payload = {
       thumbnails,
       boxes,
@@ -115,24 +148,40 @@ function DashboardContent() {
 
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
-          selectedLabel={selectedLabel}
-          onLabelSelect={setSelectedLabel}
+          selectedLabelId={selectedLabelId}
+          labels={labels}
+          onLabelIdSelect={setSelectedLabelId}
+          onManageLabelsClick={() => setShowManageLabels(true)}
         />
+
+        {showManageLabels && (
+          <ManageLabelsModal
+            open={showManageLabels}
+            onClose={() => setShowManageLabels(false)}
+            labels={labels}
+            createLabel={createLabel}
+            updateLabel={updateLabel}
+            deleteLabel={(labelId) => deleteLabel(labelId).then(() => handleLocalDeleteLabel(labelId))}
+            reorderLabels={reorderLabels}
+          />)}
 
         <div className="flex-1 flex flex-col overflow-auto">
           {currentView === "labeling" ? (
             thumbnails.length > 0 ? (
               <ImageViewer
+                labels={labels}
                 frame={thumbnails[currentFrame]}
                 frameNumber={absoluteFrameNumber}
                 totalFrames={totalFrames}
-                selectedLabel={selectedLabel}
+                selectedLabel={selectedLabelId}
                 onPrevFrame={handlePrevFrame}
                 onNextFrame={handleNextFrame}
                 boxes={boxes}
                 setBoxes={setBoxes}
               />
-            ) : (
+            ) : isImagesPending || isDatasetsPending 
+              ?  <div className="text-center text-[#A3A3A3] mt-20"><Spinner text="Loading your datasets"/></div>
+              : (
               <div className="text-center text-[#A3A3A3] mt-20">No images in this dataset</div>
             )
           ) : (

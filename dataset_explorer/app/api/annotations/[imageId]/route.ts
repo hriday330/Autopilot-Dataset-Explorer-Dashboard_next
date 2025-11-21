@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@lib/supabaseServer";
 
-// ===========================
-// GET /api/annotations/:imageId
-// ===========================
 export async function GET(
   req: Request,
   { params }: { params: { imageId: string } }
@@ -27,10 +24,6 @@ export async function GET(
   }
 }
 
-// ===========================
-// POST /api/annotations/:imageId
-// Body: { boxes: [...], userId }
-// ===========================
 export async function POST(
   req: Request,
   { params }: { params: { imageId: string } }

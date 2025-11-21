@@ -3,7 +3,7 @@
 import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useRef, useEffect } from "react";
-import type { BoundingBox } from "@lib/types";
+import type { BoundingBox, Label } from "@lib/types";
 interface Frame {
   id: string;
   url: string;
@@ -17,13 +17,14 @@ interface ImageViewerProps {
   frameNumber: number;
   totalFrames: number;
   selectedLabel: string;
+  labels: Label[];
   onPrevFrame: () => void;
   onNextFrame: () => void;
   boxes: Record<string, BoundingBox[]>;
   setBoxes: React.Dispatch<React.SetStateAction<Record<string, BoundingBox[]>>>;
 }
 
-export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, onPrevFrame, onNextFrame, boxes, setBoxes }: ImageViewerProps) {
+export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, onPrevFrame, onNextFrame, boxes, setBoxes, labels }: ImageViewerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentBox, setCurrentBox] = useState<BoundingBox | null>(null);
@@ -62,12 +63,13 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
     const height = y - startPoint.y;
     
     setCurrentBox({
-      id: Date.now().toString(),
+      id: selectedLabel,
       x: width > 0 ? startPoint.x : x,
       y: height > 0 ? startPoint.y : y,
       width: Math.abs(width),
       height: Math.abs(height),
       label: selectedLabel
+      
     });
   };
 
@@ -93,15 +95,13 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
   const currentFrameBoxes = boxes[frame.id] || [];
 
   // Get label color
-  const getLabelColor = (label: string) => {
-    const colors: Record<string, string> = {
-      "Pedestrian": "#E82127",
-      "Car": "#4A9EFF",
-      "Traffic Light": "#FFA500",
-      "Sign": "#00FF88"
-    };
-    return colors[label] || "#E82127";
+  const getLabelColor = (labelId: string) => {
+    return labels.find(l => l.id === labelId)?.color || "#E82127";
   };
+
+  const getLabelName = (labelId: string) => {
+    return labels.find(l => l.id === labelId)?.name || "Unknown";
+  }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
@@ -164,7 +164,7 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
               className="absolute -top-6 left-0 px-2 py-0.5 rounded text-xs text-white flex items-center gap-1"
               style={{ backgroundColor: getLabelColor(box.label) }}
             >
-              {box.label}
+              {getLabelName(box.label)}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -194,7 +194,7 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
               className="absolute -top-6 left-0 px-2 py-0.5 rounded text-xs text-white"
               style={{ backgroundColor: getLabelColor(selectedLabel) }}
             >
-              {selectedLabel}
+              {getLabelName(selectedLabel)}
             </div>
           </div>
         )}
@@ -203,7 +203,7 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
       {/* Info Text */}
       <div className="text-center">
         <p className="text-xs text-[#A3A3A3]">
-          Click and drag to draw bounding boxes • Selected: <span className="text-[#E82127]">{selectedLabel}</span>
+          Click and drag to draw bounding boxes • Selected: <span className="text-[#E82127]">{getLabelName(selectedLabel)}</span>
         </p>
       </div>
 
