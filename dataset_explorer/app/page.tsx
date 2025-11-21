@@ -15,6 +15,8 @@ import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
 import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 import { useFrameNavigation } from "@hooks/useFrameNavigation";
 import { useLabelClasses } from "@hooks/useLabelClasses";
+import { ManageLabelsModal } from "@components/ManageLabelsModal";
+import { Button } from "@components/ui/button";
 
 const PAGE_SIZE = 12;
 
@@ -32,8 +34,15 @@ function DashboardContent() {
   const datasetFromUrl = searchParams.get("dataset"); 
   const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showManageLabels, setShowManageLabels] = useState(false);
 
-  const { labels }  = useLabelClasses(selectedDatasetId);
+  const { 
+    labels, 
+    createLabel, 
+    updateLabel, 
+    reorderLabels, 
+    deleteLabel
+  }  = useLabelClasses(selectedDatasetId);
 
   useEffect(() => {
   if (labels.length > 0 && !selectedLabelId) {
@@ -129,7 +138,19 @@ function DashboardContent() {
           selectedLabelId={selectedLabelId}
           labels={labels}
           onLabelIdSelect={setSelectedLabelId}
+          onManageLabelsClick={() => setShowManageLabels(true)}
         />
+
+        {showManageLabels && (
+          <ManageLabelsModal
+            open={showManageLabels}
+            onClose={() => setShowManageLabels(false)}
+            labels={labels}
+            createLabel={createLabel}
+            updateLabel={updateLabel}
+            deleteLabel={deleteLabel}
+            reorderLabels={reorderLabels}
+          />)}
 
         <div className="flex-1 flex flex-col overflow-auto">
           {currentView === "labeling" ? (

@@ -1,17 +1,24 @@
 "use client";
 
-import { Box, Tag, Layers } from "lucide-react";
+import { Box, Tag, Layers, ListChecks } from "lucide-react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { useState } from "react";
 import { Label } from "@lib/types";
+
 interface SidebarProps {
   selectedLabelId: string;
   onLabelIdSelect: (label: string) => void;
   labels: Label[];
+  onManageLabelsClick?: () => void;
 }
 
-export function Sidebar({ selectedLabelId, onLabelIdSelect, labels }: SidebarProps) {
+export function Sidebar({
+  selectedLabelId,
+  onLabelIdSelect,
+  labels,
+  onManageLabelsClick,
+}: SidebarProps) {
   const [activeLabels, setActiveLabels] = useState<string[]>(labels.map(l => l.id));
   const [activeTool, setActiveTool] = useState("Bounding Box");
 
@@ -38,6 +45,7 @@ export function Sidebar({ selectedLabelId, onLabelIdSelect, labels }: SidebarPro
 
   return (
     <aside className="w-[260px] bg-[#0E0E0E] border-r border-[#1F1F1F] flex flex-col">
+
       {/* Tools */}
       <div className="p-4 border-b border-[#1F1F1F]">
         <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Labeling Tools</h3>
@@ -62,6 +70,17 @@ export function Sidebar({ selectedLabelId, onLabelIdSelect, labels }: SidebarPro
             );
           })}
         </div>
+      </div>
+
+      {/* Manage Labels */}
+      <div className="p-4 border-b border-[#1F1F1F]">
+        <Button
+          onClick={onManageLabelsClick}
+          className="w-full justify-start gap-2 bg-[#E82127] hover:bg-[#D01F25] text-white"
+        >
+          <ListChecks className="w-4 h-4" />
+          <span>Manage Labels</span>
+        </Button>
       </div>
 
       {/* Labels */}
