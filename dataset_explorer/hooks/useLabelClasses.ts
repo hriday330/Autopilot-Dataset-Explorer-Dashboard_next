@@ -27,113 +27,113 @@ export function useLabelClasses(datasetId: string | null) {
     setLoading(false);
   }, [datasetId]);
 
-    useEffect(() => {
-        loadLabels();
-    }, [loadLabels]);
+  useEffect(() => {
+    loadLabels();
+  }, [loadLabels]);
 
-    const createLabel = useCallback( async (name: string, color?: string) => {
-        if (!datasetId) return;
+  const createLabel = useCallback(
+    async (name: string, color?: string) => {
+      if (!datasetId) return;
 
-        const tempId = crypto.randomUUID();
+      const tempId = crypto.randomUUID();
 
-        // 1) Compute next index based on current labels
-        const nextIndex =
+      // 1) Compute next index based on current labels
+      const nextIndex =
         labels.length > 0
-            ? Math.max(...labels.map((l) => l.order_index ?? 0)) + 1
-            : 0;
+          ? Math.max(...labels.map((l) => l.order_index ?? 0)) + 1
+          : 0;
 
-        const optimistic: Label = {
+      const optimistic: Label = {
         id: tempId,
         dataset_id: datasetId,
         name,
         color: color ?? "#ffffff",
         order_index: nextIndex,
         created_at: new Date().toISOString(),
-        };
+      };
 
-        // 2) Optimistically add to state
-        setLabels((prev) => [...prev, optimistic]);
+      // 2) Optimistically add to state
+      setLabels((prev) => [...prev, optimistic]);
 
-        // 3) Persist to Supabase and get real row back
-        const { data, error } = await supabase
+      // 3) Persist to Supabase and get real row back
+      const { data, error } = await supabase
         .from("label_classes")
         .insert({
-            dataset_id: datasetId,
-            name,
-            color,
-            order_index: nextIndex,
+          dataset_id: datasetId,
+          name,
+          color,
+          order_index: nextIndex,
         })
         .select("*")
         .single();
 
-        if (error) {
+      if (error) {
         // 4a) Roll back optimistic label
         setError(error.message);
         setLabels((prev) => prev.filter((l) => l.id !== tempId));
         return;
-        }
+      }
 
-        // 4b) Replace temp label with real DB row
-        setLabels((prev) =>
-        prev.map((l) => (l.id === tempId ? (data as Label) : l))
-        );
+      // 4b) Replace temp label with real DB row
+      setLabels((prev) =>
+        prev.map((l) => (l.id === tempId ? (data as Label) : l)),
+      );
     },
-    [datasetId, labels]
-    );
+    [datasetId, labels],
+  );
 
+  const updateLabel = useCallback(
+    async (labelId: string, updates: Partial<Label>) => {
+      const { error } = await supabase
+        .from("label_classes")
+        .update(updates)
+        .eq("id", labelId);
 
+      if (error) {
+        setError(error.message);
+        return;
+      }
 
-    const updateLabel = useCallback(
-        async (labelId: string, updates: Partial<Label>) => {
-        const { error } = await supabase
-            .from("label_classes")
-            .update(updates)
-            .eq("id", labelId);
+      loadLabels();
+    },
+    [loadLabels],
+  );
 
-        if (error) {
-            setError(error.message);
-            return;
-        }
+  const deleteLabel = useCallback(
+    async (labelId: string) => {
+      const { error } = await supabase
+        .from("label_classes")
+        .delete()
+        .eq("id", labelId);
 
-        loadLabels();
-        },
-        [loadLabels]
-    );
+      if (error) {
+        setError(error.message);
+        return;
+      }
 
-    const deleteLabel = useCallback(
-        async (labelId: string) => {
-        const { error } = await supabase
-            .from("label_classes")
-            .delete()
-            .eq("id", labelId);
+      loadLabels();
+    },
+    [loadLabels],
+  );
 
-        if (error) {
-            setError(error.message);
-            return;
-        }
+  const reorderLabels = useCallback(
+    async (orderedIds: string[]) => {
+      const updates = orderedIds.map((id, index) => ({
+        id,
+        order_index: index,
+      }));
 
-        loadLabels();
-        },
-        [loadLabels]
-    );
+      const { error } = await supabase.from("label_classes").upsert(updates);
 
-    const reorderLabels = useCallback(
-        async (orderedIds: string[]) => {
-        const updates = orderedIds.map((id, index) => ({
-            id,
-            order_index: index,
-        }));
+      if (error) {
+        setError(error.message);
+        return;
+      }
 
-        const { error } = await supabase.from("label_classes").upsert(updates);
-
-        if (error) {
-            setError(error.message);
-            return;
-        }
-
-        loadLabels();
-        },[loadLabels]
-    );
+      loadLabels();
+    },
+    [loadLabels],
+  );
 
   return {
     labels,
