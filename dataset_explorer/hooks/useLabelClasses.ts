@@ -99,23 +99,36 @@ export function useLabelClasses(datasetId: string | null) {
     [loadLabels],
   );
 
-  // handle deleting annotations using the deleted label elsewhere if needed
-  const deleteLabel = useCallback(
-    async (labelId: string) => {
-      const { error } = await supabase
-        .from("label_classes")
-        .delete()
-        .eq("id", labelId);
+  const deleteLabel = useCallback( async (labelId: string) => {
+    if (!datasetId) return;
 
-      if (error) {
-        setError(error.message);
-        return;
-      }
+    // 1) remove annotations with this label
+    const { error: annErr } = await supabase
+    .from("annotations")
+    .delete()
+    .eq("label_id", labelId);
 
-      loadLabels();
-    },
-    [loadLabels],
-  );
+    if (annErr) {
+    setError(annErr.message);
+    return;
+    }
+
+    // 2) delete the label class
+    const { error: labelErr } = await supabase
+    .from("label_classes")
+    .delete()
+    .eq("id", labelId);
+
+    if (labelErr) {
+    setError(labelErr.message);
+    return;
+    }
+
+    // 3) reload updated label list
+    loadLabels();
+    },[datasetId, loadLabels],
+    );
+
 
   const reorderLabels = useCallback(
     async (orderedIds: string[]) => {

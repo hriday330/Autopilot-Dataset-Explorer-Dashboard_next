@@ -85,6 +85,18 @@ function DashboardContent() {
     pageSize: PAGE_SIZE,
   });
 
+  const handleLocalDeleteLabel = (labelId: string) => {
+  setBoxes(prev =>
+    Object.fromEntries(
+      Object.entries(prev).map(([imageId, arr]) => [
+        imageId,
+        arr.filter(box => box.label !== labelId),
+      ])
+    )
+  );
+};
+
+
   const handleExportData = async () => {
 
     await waitForSave();
@@ -148,7 +160,7 @@ function DashboardContent() {
             labels={labels}
             createLabel={createLabel}
             updateLabel={updateLabel}
-            deleteLabel={deleteLabel}
+            deleteLabel={(labelId) => deleteLabel(labelId).then(() => handleLocalDeleteLabel(labelId))}
             reorderLabels={reorderLabels}
           />)}
 

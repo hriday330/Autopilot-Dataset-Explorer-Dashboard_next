@@ -63,7 +63,7 @@ export function ImageViewer({ frame, frameNumber, totalFrames, selectedLabel, on
     const height = y - startPoint.y;
     
     setCurrentBox({
-      id: getLabelName(selectedLabel),
+      id: selectedLabel,
       x: width > 0 ? startPoint.x : x,
       y: height > 0 ? startPoint.y : y,
       width: Math.abs(width),
