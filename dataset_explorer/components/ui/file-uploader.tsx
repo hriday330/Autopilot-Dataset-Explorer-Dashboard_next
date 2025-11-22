@@ -28,12 +28,11 @@ export default function FileUploader({
     setError("");
     if (!files || files.length === 0) return;
 
-    
     if (files.length > maxFiles) {
       setError(
         maxFiles === 1
           ? "Please select only one file."
-          : `You can upload up to ${maxFiles} files.`
+          : `You can upload up to ${maxFiles} files.`,
       );
       return;
     }

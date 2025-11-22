@@ -27,9 +27,7 @@ export default function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        {children} 
-      </AlertDialogTrigger>
+      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
 
       <AlertDialogContent className="border-red-700/40 bg-[#1a0f0f]">
         <AlertDialogHeader>

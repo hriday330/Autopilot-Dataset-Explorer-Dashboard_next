@@ -4,9 +4,9 @@ import { type Dispatch, type SetStateAction, useCallback } from "react";
 
 interface UseFrameNavigationProps {
   currentFrame: number;
-  setCurrentFrame: Dispatch<SetStateAction<number>>
+  setCurrentFrame: Dispatch<SetStateAction<number>>;
   currentPage: number;
-  setCurrentPage:  Dispatch<SetStateAction<number>>
+  setCurrentPage: Dispatch<SetStateAction<number>>;
   thumbnailsLength: number;
   pageSize: number;
 }
@@ -19,7 +19,6 @@ export function useFrameNavigation({
   thumbnailsLength,
   pageSize,
 }: UseFrameNavigationProps) {
-  
   const handleNextFrame = useCallback(() => {
     if (currentFrame < thumbnailsLength - 1) {
       setCurrentFrame(currentFrame + 1);

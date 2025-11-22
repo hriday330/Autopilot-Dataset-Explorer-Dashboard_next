@@ -14,7 +14,10 @@ export function useDatasetImageCache() {
   const key = (datasetId: string, page: number) =>
     ["datasetImageCache", datasetId, page] as const;
 
-  const getCachedThumbnails = (datasetId: string, page: number): CacheEntry | null => {
+  const getCachedThumbnails = (
+    datasetId: string,
+    page: number,
+  ): CacheEntry | null => {
     return queryClient.getQueryData<CacheEntry>(key(datasetId, page)) ?? null;
   };
 
@@ -26,7 +29,7 @@ export function useDatasetImageCache() {
     datasetId: string,
     page: number,
     thumbnails: ImageThumbnail[],
-    total: number
+    total: number,
   ) => {
     queryClient.setQueryData<CacheEntry>(key(datasetId, page), {
       thumbnails,

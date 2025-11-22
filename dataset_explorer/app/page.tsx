@@ -18,43 +18,46 @@ import { useLabelClasses } from "@hooks/useLabelClasses";
 import { ManageLabelsModal } from "@components/ManageLabelsModal";
 import Spinner from "@components/ui/spinner";
 
-
 const PAGE_SIZE = 12;
 
 function DashboardContent() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [selectedLabelId, setSelectedLabelId] = useState<string>("");
   const [boxes, setBoxes] = useState<Record<string, BoundingBox[]>>({});
-  const [currentView, setCurrentView] = useState<"labeling" | "analytics">("labeling");
+  const [currentView, setCurrentView] = useState<"labeling" | "analytics">(
+    "labeling",
+  );
 
   const { user } = useUser();
   const { loadDatasets, isPending: isDatasetsPending } = useDatasets();
-  const { thumbnails, imagesTotal, loadImagesForDataset, isPending: isImagesPending } = useLoadImages();
+  const {
+    thumbnails,
+    imagesTotal,
+    loadImagesForDataset,
+    isPending: isImagesPending,
+  } = useLoadImages();
 
   const searchParams = useSearchParams();
-  const datasetFromUrl = searchParams.get("dataset"); 
-  const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null);
+  const datasetFromUrl = searchParams.get("dataset");
+  const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(
+    null,
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [showManageLabels, setShowManageLabels] = useState(false);
 
-  const { 
-    labels, 
-    createLabel, 
-    updateLabel, 
-    reorderLabels, 
-    deleteLabel
-  }  = useLabelClasses(selectedDatasetId);
+  const { labels, createLabel, updateLabel, reorderLabels, deleteLabel } =
+    useLabelClasses(selectedDatasetId);
 
   useEffect(() => {
-  if (labels.length > 0 && !selectedLabelId) {
-    setSelectedLabelId(labels[0].id);
-  }
-}, [labels]);
+    if (labels.length > 0 && !selectedLabelId) {
+      setSelectedLabelId(labels[0].id);
+    }
+  }, [labels]);
 
   useEffect(() => {
     if (!user) return;
 
-    // If URL provided dataset, use it 
+    // If URL provided dataset, use it
     if (datasetFromUrl) {
       setSelectedDatasetId(datasetFromUrl);
       loadDatasets(user.id); // still load all datasets
@@ -73,7 +76,12 @@ function DashboardContent() {
   }, [selectedDatasetId, currentPage]);
 
   useLoadAnnotations(thumbnails, currentFrame, setBoxes);
-  const { waitForSave } = useAutosaveAnnotations(thumbnails, currentFrame, boxes, user);
+  const { waitForSave } = useAutosaveAnnotations(
+    thumbnails,
+    currentFrame,
+    boxes,
+    user,
+  );
 
   const totalFrames = imagesTotal;
 
@@ -87,19 +95,17 @@ function DashboardContent() {
   });
 
   const handleLocalDeleteLabel = (labelId: string) => {
-  setBoxes(prev =>
-    Object.fromEntries(
-      Object.entries(prev).map(([imageId, arr]) => [
-        imageId,
-        arr.filter(box => box.label !== labelId),
-      ])
-    )
-  );
-};
-
+    setBoxes((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([imageId, arr]) => [
+          imageId,
+          arr.filter((box) => box.label !== labelId),
+        ]),
+      ),
+    );
+  };
 
   const handleExportData = async () => {
-
     await waitForSave();
     const payload = {
       datasetId: selectedDatasetId,
@@ -128,13 +134,20 @@ function DashboardContent() {
   };
 
   const handleClearData = () => {
-    if (window.confirm("Are you sure you want to clear all labels? This cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to clear all labels? This cannot be undone.",
+      )
+    ) {
       setBoxes({});
     }
   };
 
-  const labeledFramesCount = Object.keys(boxes).filter((key) => boxes[key].length > 0).length;
-  const absoluteFrameNumber = (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
+  const labeledFramesCount = Object.keys(boxes).filter(
+    (key) => boxes[key].length > 0,
+  ).length;
+  const absoluteFrameNumber =
+    (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
 
   return (
     <div className="h-screen flex flex-col bg-[#0E0E0E] overflow-hidden">
@@ -160,9 +173,12 @@ function DashboardContent() {
             labels={labels}
             createLabel={createLabel}
             updateLabel={updateLabel}
-            deleteLabel={(labelId) => deleteLabel(labelId).then(() => handleLocalDeleteLabel(labelId))}
+            deleteLabel={(labelId) =>
+              deleteLabel(labelId).then(() => handleLocalDeleteLabel(labelId))
+            }
             reorderLabels={reorderLabels}
-          />)}
+          />
+        )}
 
         <div className="flex-1 flex flex-col overflow-auto">
           {currentView === "labeling" ? (
@@ -178,10 +194,14 @@ function DashboardContent() {
                 boxes={boxes}
                 setBoxes={setBoxes}
               />
-            ) : isImagesPending || isDatasetsPending 
-              ?  <div className="text-center text-[#A3A3A3] mt-20"><Spinner text="Loading your datasets"/></div>
-              : (
-              <div className="text-center text-[#A3A3A3] mt-20">No images in this dataset</div>
+            ) : isImagesPending || isDatasetsPending ? (
+              <div className="text-center text-[#A3A3A3] mt-20">
+                <Spinner text="Loading your datasets" />
+              </div>
+            ) : (
+              <div className="text-center text-[#A3A3A3] mt-20">
+                No images in this dataset
+              </div>
             )
           ) : (
             <AnalyticsPanel boxes={boxes} frames={thumbnails} />
@@ -189,18 +209,23 @@ function DashboardContent() {
         </div>
       </div>
 
-      <DashboardFooter labeledCount={labeledFramesCount} totalCount={totalFrames} />
+      <DashboardFooter
+        labeledCount={labeledFramesCount}
+        totalCount={totalFrames}
+      />
     </div>
   );
 }
 
 export default function Page() {
   return (
-    <Suspense fallback={
-      <div className="h-screen flex items-center justify-center bg-[#0E0E0E]">
-        <div className="text-[#A3A3A3]">Loading dashboard...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center bg-[#0E0E0E]">
+          <div className="text-[#A3A3A3]">Loading dashboard...</div>
+        </div>
+      }
+    >
       <DashboardContent />
     </Suspense>
   );

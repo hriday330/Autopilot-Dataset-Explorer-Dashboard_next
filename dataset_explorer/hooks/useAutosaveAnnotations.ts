@@ -19,7 +19,7 @@ export function useAutosaveAnnotations(
   thumbnails: Thumbnail[],
   currentFrame: number,
   boxes: BoxesState,
-  user: User | null
+  user: User | null,
 ) {
   const pendingCount = useRef(0);
 

@@ -22,7 +22,7 @@ type BoxesState = Record<string, BoundingBox[]>;
 export function useLoadAnnotations(
   thumbnails: Thumbnail[],
   currentFrame: number,
-  setBoxes: React.Dispatch<React.SetStateAction<BoxesState>>
+  setBoxes: React.Dispatch<React.SetStateAction<BoxesState>>,
 ) {
   useEffect(() => {
     const img = thumbnails[currentFrame];

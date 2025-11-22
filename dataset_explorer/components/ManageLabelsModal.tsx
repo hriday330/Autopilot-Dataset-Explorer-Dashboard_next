@@ -64,7 +64,11 @@ function SortableLabelRow({
       style={style}
       className="flex items-center gap-3 px-3 py-2 rounded-md bg-[#141414] border border-[#262626]"
     >
-      <button {...attributes} {...listeners} className="cursor-grab text-[#555]">
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab text-[#555]"
+      >
         <GripVertical className="w-4 h-4" />
       </button>
 
@@ -113,9 +117,13 @@ export function ManageLabelsModal({
   reorderLabels,
 }: ManageLabelsModalProps) {
   const [localLabels, setLocalLabels] = useState<Label[]>(labels);
-  const [localOrder, setLocalOrder] = useState<string[]>(labels.map((l) => l.id));
+  const [localOrder, setLocalOrder] = useState<string[]>(
+    labels.map((l) => l.id),
+  );
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 }}));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
 
   // Sync when modal opens / labels change
   useEffect(() => {
@@ -127,7 +135,7 @@ export function ManageLabelsModal({
 
   const updateLocal = (id: string, updates: Partial<Label>) => {
     setLocalLabels((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, ...updates } : l))
+      prev.map((l) => (l.id === id ? { ...l, ...updates } : l)),
     );
   };
 
@@ -183,8 +191,15 @@ export function ManageLabelsModal({
         </div>
 
         <div className="p-4 space-y-5 max-h-[65vh] overflow-y-auto">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={localOrder} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={localOrder}
+              strategy={verticalListSortingStrategy}
+            >
               <div className="space-y-2">
                 {localOrder.map((id) => {
                   const draft = localLabels.find((l) => l.id === id);
@@ -234,7 +249,10 @@ function AddLabelRow({ onAdd }: { onAdd: (name: string) => void }) {
       />
 
       <Button
-        onClick={() => { if (name.trim()) onAdd(name.trim()); setName(""); }}
+        onClick={() => {
+          if (name.trim()) onAdd(name.trim());
+          setName("");
+        }}
         className="bg-[#E82127] hover:bg-[#D01F25] text-white"
       >
         <Plus className="w-4 h-4" />

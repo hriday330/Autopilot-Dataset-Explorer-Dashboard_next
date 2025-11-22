@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import {
-  createDatasetAction,
-  deleteImageAction
-} from "@lib/actions/dataset";
+import { createDatasetAction, deleteImageAction } from "@lib/actions/dataset";
 import { supabase } from "@lib/supabaseClient";
 import { uploadWithProgress } from "@lib/uploadWithProgress";
 import { ImageThumbnail } from "@lib/types";
@@ -24,9 +21,9 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   const handleDeleteImage = async (
     imageId: string,
     storagePath: string,
-    onOptimisticDelete: () => void
+    onOptimisticDelete: () => void,
   ) => {
-    setDeletingIds(prev => [...prev, imageId]);
+    setDeletingIds((prev) => [...prev, imageId]);
     setMessage(null);
     startTransition(async () => {
       const result = await deleteImageAction(imageId, storagePath);
@@ -38,7 +35,7 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
         onOptimisticDelete();
         handlers.onDeleteComplete?.();
       }
-      setDeletingIds(prev => prev.filter(id => id !== imageId));
+      setDeletingIds((prev) => prev.filter((id) => id !== imageId));
     });
   };
 
@@ -57,70 +54,67 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   };
 
   const handleUploadFiles = async (
-  files: FileList | null,
-  datasetId: string,
-  datasetName: string,
-  userId: string,
-  onOptimisticAdd: (thumbnails: ImageThumbnail[]) => void
-) => {
-  if (!files || !userId || !datasetId) return;
+    files: FileList | null,
+    datasetId: string,
+    datasetName: string,
+    userId: string,
+    onOptimisticAdd: (thumbnails: ImageThumbnail[]) => void,
+  ) => {
+    if (!files || !userId || !datasetId) return;
 
-  setUploading(true);
-  setMessage(null);
+    setUploading(true);
+    setMessage(null);
 
-  try {
-    const fd = new FormData();
+    try {
+      const fd = new FormData();
 
-    // append files (single OR multiple)
-    Array.from(files).forEach((f) => fd.append("files", f));
+      // append files (single OR multiple)
+      Array.from(files).forEach((f) => fd.append("files", f));
 
-    // required metadata
-    fd.append("datasetId", datasetId);
-    fd.append("datasetName", datasetName);
-    fd.append("userId", userId);
+      // required metadata
+      fd.append("datasetId", datasetId);
+      fd.append("datasetName", datasetName);
+      fd.append("userId", userId);
 
-    setUploadProgress(0);
-    const json = await uploadWithProgress({
-      url: "/api/upload",
-      formData: fd,
-      onProgress: setUploadProgress, 
-    });
+      setUploadProgress(0);
+      const json = await uploadWithProgress({
+        url: "/api/upload",
+        formData: fd,
+        onProgress: setUploadProgress,
+      });
 
-    if (!json.success) {
-      setMessage(`Upload error: ${json.error}`);
-      return;
+      if (!json.success) {
+        setMessage(`Upload error: ${json.error}`);
+        return;
+      }
+
+      setMessage("Upload complete");
+
+      if (!json.isZip) {
+        // Refresh signed URLs in parallel
+        const newThumbnails = await Promise.all(
+          json.thumbnails.map(async (t) => {
+            const { data } = await supabase.storage
+              .from("datasets")
+              .createSignedUrl(t.storage_path, 3600);
+
+            return {
+              ...t,
+              url: data?.signedUrl ?? t.url ?? "",
+            };
+          }),
+        );
+        onOptimisticAdd(newThumbnails);
+      } else {
+        handlers.onUploadComplete?.();
+      }
+    } catch (err: any) {
+      console.error(err);
+      setMessage("Upload error: " + (err?.message ?? String(err)));
+    } finally {
+      setUploading(false);
     }
-
-    setMessage("Upload complete");
-
-    if (!json.isZip) {
-      // Refresh signed URLs in parallel
-      const newThumbnails = await Promise.all(
-        json.thumbnails.map(async (t) => {
-          const { data } = await supabase
-            .storage
-            .from("datasets")
-            .createSignedUrl(t.storage_path, 3600);
-
-          return {
-            ...t,
-            url: data?.signedUrl ?? t.url ?? "",
-          };
-        })
-      );
-      onOptimisticAdd(newThumbnails);
-    } else {
-      handlers.onUploadComplete?.();
-    }
-
-   
-  } catch (err: any) {
-    console.error(err);
-    setMessage("Upload error: " + (err?.message ?? String(err)));
-  } finally {
-    setUploading(false);
-  }
-};
+  };
 
   return {
     uploading,
@@ -131,7 +125,7 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     handleCreateDataset,
     handleUploadFiles,
     isPending,
-    uploadProgress, 
-    setUploadProgress
+    uploadProgress,
+    setUploadProgress,
   };
 }

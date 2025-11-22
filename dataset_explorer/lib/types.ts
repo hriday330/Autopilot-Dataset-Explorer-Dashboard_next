@@ -22,10 +22,10 @@ export interface ImageThumbnail {
 }
 
 export interface Label {
-  id: string;          
-  dataset_id: string;  
-  name: string;        
-  color?: string;      
-  order_index?: number; 
-  created_at: string;  
+  id: string;
+  dataset_id: string;
+  name: string;
+  color?: string;
+  order_index?: number;
+  created_at: string;
 }

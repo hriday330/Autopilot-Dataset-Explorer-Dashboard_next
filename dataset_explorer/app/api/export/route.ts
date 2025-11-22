@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const { data: imagesData, error: imgErr } = await supabaseServer
       .from("images")
       .select("*")
-      .eq("dataset_id", datasetId)
+      .eq("dataset_id", datasetId);
 
     if (imgErr) throw imgErr;
 
@@ -21,7 +21,6 @@ export async function POST(req: Request) {
       .eq("dataset_id", datasetId);
 
     if (annErr) throw annErr;
-
 
     const { data: labelsData, error: labelErr } = await supabaseServer
       .from("label_classes")
@@ -38,9 +37,7 @@ export async function POST(req: Request) {
       _labelId: l.id, // internal use
     }));
 
-    const catMap = new Map(
-      categories.map((c) => [c._labelId, c.id])
-    );
+    const catMap = new Map(categories.map((c) => [c._labelId, c.id]));
 
     // 5. COCO images
     const images = imagesData.map((img, index) => ({
@@ -51,9 +48,7 @@ export async function POST(req: Request) {
       _imageId: img.id,
     }));
 
-    const imgMap = new Map(
-      images.map((i) => [i._imageId, i.id])
-    );
+    const imgMap = new Map(images.map((i) => [i._imageId, i.id]));
 
     // 6. COCO annotations
     let annId = 1;

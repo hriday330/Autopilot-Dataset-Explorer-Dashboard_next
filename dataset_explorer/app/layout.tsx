@@ -5,7 +5,8 @@ import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
 
 export const metadata: Metadata = {
   title: "Autopilot Dataset Explorer",
-  description: "AI-powered dataset labeling tool with interactive bounding box annotation",
+  description:
+    "AI-powered dataset labeling tool with interactive bounding box annotation",
 };
 
 export default function RootLayout({
@@ -17,9 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ReactQueryProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </ReactQueryProvider>
       </body>
     </html>

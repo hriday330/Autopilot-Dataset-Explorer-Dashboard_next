@@ -15,16 +15,16 @@ export function useLoadImages() {
   const prefetchPage = async (
     datasetId: string,
     page: number,
-    perPage: number
+    perPage: number,
   ) => {
     if (page < 1) return;
-    if (cache.hasPage(datasetId, page)) return; 
+    if (cache.hasPage(datasetId, page)) return;
 
     try {
       const result = await fetchImagesForDatasetAction(
         datasetId,
         page,
-        perPage
+        perPage,
       );
 
       if (!result.error) {
@@ -35,7 +35,11 @@ export function useLoadImages() {
     }
   };
 
-  const loadImagesForDataset = (datasetId: string, page: number, perPage: number) => {
+  const loadImagesForDataset = (
+    datasetId: string,
+    page: number,
+    perPage: number,
+  ) => {
     setMessage(null);
     const cached = cache.getCachedThumbnails(datasetId, page);
 
@@ -50,10 +54,13 @@ export function useLoadImages() {
       return;
     }
 
-
     setThumbnails([]);
     startTransition(async () => {
-      const result = await fetchImagesForDatasetAction(datasetId, page, perPage);
+      const result = await fetchImagesForDatasetAction(
+        datasetId,
+        page,
+        perPage,
+      );
       if (result.error) {
         setMessage(`Error loading images: ${result.error}`);
         setThumbnails([]);
@@ -68,7 +75,7 @@ export function useLoadImages() {
         // Prefetch neighbors in the background
         prefetchPage(datasetId, page + 1, perPage);
         prefetchPage(datasetId, page - 1, perPage);
-        }
+      }
     });
   };
 

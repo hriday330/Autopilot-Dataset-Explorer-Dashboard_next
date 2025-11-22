@@ -16,26 +16,32 @@ export interface FetchImagesResult {
 }
 
 // Fetch all datasets for a user
-export async function fetchDatasetsAction(userId: string): Promise<FetchDatasetsResult> {
+export async function fetchDatasetsAction(
+  userId: string,
+): Promise<FetchDatasetsResult> {
   try {
     const { data: dsData, error: dsError } = await supabaseServer
-      .from('datasets')
-      .select('id,name,created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .from("datasets")
+      .select("id,name,created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     if (dsError) throw dsError;
 
     const countsMap: Record<string, number> = {};
-    const dsList = (dsData ?? []).map((d: any) => ({ id: d.id, name: d.name, created_at: d.created_at }));
+    const dsList = (dsData ?? []).map((d: any) => ({
+      id: d.id,
+      name: d.name,
+      created_at: d.created_at,
+    }));
 
     // For each dataset, count images
     for (const d of dsList) {
       try {
         const { count, error: countErr } = await supabaseServer
-          .from('images')
-          .select('id', { count: 'exact', head: true })
-          .eq('dataset_id', d.id);
+          .from("images")
+          .select("id", { count: "exact", head: true })
+          .eq("dataset_id", d.id);
         countsMap[d.id] = countErr ? 0 : (count ?? 0);
       } catch (e) {
         countsMap[d.id] = 0;
@@ -52,17 +58,17 @@ export async function fetchDatasetsAction(userId: string): Promise<FetchDatasets
 export async function fetchImagesForDatasetAction(
   datasetId: string,
   page: number,
-  perPage: number
+  perPage: number,
 ): Promise<FetchImagesResult> {
   try {
     const from = (page - 1) * perPage;
     const to = from + perPage - 1;
 
     const { data, error, count } = await supabaseServer
-      .from('images')
-      .select('id,storage_path,created_at', { count: 'exact' })
-      .eq('dataset_id', datasetId)
-      .order('created_at', { ascending: false })
+      .from("images")
+      .select("id,storage_path,created_at", { count: "exact" })
+      .eq("dataset_id", datasetId)
+      .order("created_at", { ascending: false })
       .range(from, to);
 
     if (error) throw error;
@@ -76,15 +82,20 @@ export async function fetchImagesForDatasetAction(
     for (const img of data) {
       try {
         const path = img.storage_path;
-        const signed = await supabaseServer.storage.from('datasets').createSignedUrl(path, 3600); // 1 hour
-        let url = '';
-        if ((signed as any).data?.signedUrl) url = (signed as any).data.signedUrl;
-        else if ((signed as any).data?.signedURL) url = (signed as any).data.signedURL;
+        const signed = await supabaseServer.storage
+          .from("datasets")
+          .createSignedUrl(path, 3600); // 1 hour
+        let url = "";
+        if ((signed as any).data?.signedUrl)
+          url = (signed as any).data.signedUrl;
+        else if ((signed as any).data?.signedURL)
+          url = (signed as any).data.signedURL;
         else if ((signed as any).publicURL) url = (signed as any).publicURL;
-        else if ((signed as any).data?.publicUrl) url = (signed as any).data.publicUrl;
+        else if ((signed as any).data?.publicUrl)
+          url = (signed as any).data.publicUrl;
         thumbs.push({ id: img.id, url, storage_path: path });
       } catch (e) {
-        thumbs.push({ id: img.id, url: '', storage_path: img.storage_path });
+        thumbs.push({ id: img.id, url: "", storage_path: img.storage_path });
       }
     }
 
@@ -98,7 +109,7 @@ export async function fetchImagesForDatasetAction(
 export async function createDatasetAction(name: string, userId: string) {
   try {
     const { error } = await supabaseServer
-      .from('datasets')
+      .from("datasets")
       .insert([{ name, user_id: userId }])
       .select()
       .single();
@@ -115,14 +126,17 @@ export async function createDatasetAction(name: string, userId: string) {
 export async function deleteImageAction(imageId: string, storagePath: string) {
   try {
     // Delete DB record
-    const { error: delErr } = await supabaseServer.from('images').delete().eq('id', imageId);
+    const { error: delErr } = await supabaseServer
+      .from("images")
+      .delete()
+      .eq("id", imageId);
     if (delErr) throw delErr;
 
     // Try to remove from storage
     try {
-      await supabaseServer.storage.from('datasets').remove([storagePath]);
+      await supabaseServer.storage.from("datasets").remove([storagePath]);
     } catch (e) {
-      console.warn('Storage remove failed:', e);
+      console.warn("Storage remove failed:", e);
     }
 
     revalidatePath("/datasets");

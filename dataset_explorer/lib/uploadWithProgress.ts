@@ -35,7 +35,7 @@ export function uploadWithProgress({
 
 type UploadResponse = {
   success: boolean;
-  error?: string
+  error?: string;
   thumbnails: { id: string; url: string; storage_path: string }[];
   isZip?: boolean;
 };

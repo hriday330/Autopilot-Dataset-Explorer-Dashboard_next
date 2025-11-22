@@ -8,13 +8,16 @@ interface DashboardFooterProps {
   totalCount: number;
 }
 
-export function DashboardFooter({ labeledCount, totalCount }: DashboardFooterProps) {
+export function DashboardFooter({
+  labeledCount,
+  totalCount,
+}: DashboardFooterProps) {
   const progress = (labeledCount / totalCount) * 100;
-  const lastUpdated = new Date().toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  const lastUpdated = new Date().toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   return (
@@ -36,7 +39,7 @@ export function DashboardFooter({ labeledCount, totalCount }: DashboardFooterPro
           <span className="text-xs text-[#A3A3A3]">Last updated:</span>
           <span className="text-xs text-[#E5E5E5]">{lastUpdated}</span>
         </div>
-        
+
         <Badge className="bg-[#E82127] hover:bg-[#E82127] text-white border-0 flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
           Live

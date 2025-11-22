@@ -29,10 +29,11 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
       if (signInError) {
         setError(signInError.message);
@@ -54,13 +55,19 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#0E0E0E] p-6">
       <div className="w-full max-w-md bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
         <h1 className="text-2xl text-white mb-4">Sign in</h1>
-        <p className="text-sm text-[#A3A3A3] mb-4">Sign in with your email and password.</p>
+        <p className="text-sm text-[#A3A3A3] mb-4">
+          Sign in with your email and password.
+        </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/30 text-red-300 rounded">{error}</div>
+          <div className="mb-4 p-3 bg-red-900/30 text-red-300 rounded">
+            {error}
+          </div>
         )}
         {success && (
-          <div className="mb-4 p-3 bg-green-900/30 text-green-300 rounded">{success}</div>
+          <div className="mb-4 p-3 bg-green-900/30 text-green-300 rounded">
+            {success}
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,14 +103,18 @@ export default function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign in"}
             </button>
-            <Link href="/auth/register" className="text-sm text-[#A3A3A3] hover:text-white">
+            <Link
+              href="/auth/register"
+              className="text-sm text-[#A3A3A3] hover:text-white"
+            >
               Create account
             </Link>
           </div>
         </form>
 
         <div className="mt-6 text-xs text-[#6B6B6B]">
-          Forgot password? You can configure password reset via Supabase settings.
+          Forgot password? You can configure password reset via Supabase
+          settings.
         </div>
       </div>
     </div>
