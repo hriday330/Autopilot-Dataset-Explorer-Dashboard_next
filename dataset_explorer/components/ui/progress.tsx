@@ -11,6 +11,7 @@ export function Progress({
 }: React.ComponentProps<typeof ProgressPrimitive.Root> & { value?: number }) {
   const safeValue = Math.min(100, Math.max(0, value));
 
+  let x = 5;
   return (
     <ProgressPrimitive.Root
       className={cn(
