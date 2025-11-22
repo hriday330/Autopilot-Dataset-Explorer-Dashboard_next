@@ -4,6 +4,7 @@ import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useRef, useEffect } from "react";
 import type { BoundingBox, Label } from "@lib/types";
+
 interface Frame {
   id: string;
   url: string;
@@ -75,7 +76,7 @@ export function ImageViewer({
     const height = y - startPoint.y;
 
     setCurrentBox({
-      id: selectedLabel,
+      id: crypto.randomUUID(),
       x: width > 0 ? startPoint.x : x,
       y: height > 0 ? startPoint.y : y,
       width: Math.abs(width),
