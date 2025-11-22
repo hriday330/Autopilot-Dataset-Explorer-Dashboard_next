@@ -1,71 +1,74 @@
-import { ImageThumbnail } from "@lib/types";
 import { NextResponse } from "next/server";
-
-interface BoundingBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-}
+import { supabaseServer } from "@lib/supabaseServer";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { thumbnails, boxes }: { thumbnails: ImageThumbnail[], boxes: Record<string,BoundingBox[]>}= body;
-
-    if (!thumbnails || !boxes) {
-      return NextResponse.json(
-        { error: "Missing thumbnails or boxes in request body" },
-        { status: 400 }
-      );
+    const { datasetId } = await req.json();
+    if (!datasetId) {
+      return NextResponse.json({ error: "Missing datasetId" }, { status: 400 });
     }
-  
-    const categoryNames = new Set<string>();
-    Object.values(boxes).forEach((arr: BoundingBox[]) => {
-      arr?.forEach((b) => categoryNames.add(b.label));
-    });
 
-    const categories = Array.from(categoryNames).map((name, index) => ({
+    const { data: imagesData, error: imgErr } = await supabaseServer
+      .from("images")
+      .select("*")
+      .eq("dataset_id", datasetId)
+
+    if (imgErr) throw imgErr;
+
+    const { data: annData, error: annErr } = await supabaseServer
+      .from("annotations")
+      .select("*")
+      .eq("dataset_id", datasetId);
+
+    if (annErr) throw annErr;
+
+
+    const { data: labelsData, error: labelErr } = await supabaseServer
+      .from("label_classes")
+      .select("*")
+      .eq("dataset_id", datasetId)
+      .order("order_index");
+
+    if (labelErr) throw labelErr;
+
+    const categories = labelsData.map((l, index) => ({
       id: index + 1,
-      name,
+      name: l.name,
       supercategory: "none",
+      _labelId: l.id, // internal use
     }));
 
-    const categoryIdMap = new Map(
-      categories.map((c) => [c.name, c.id])
+    const catMap = new Map(
+      categories.map((c) => [c._labelId, c.id])
     );
 
-    const images = thumbnails.map((img: ImageThumbnail, index: number) => ({
+    // 5. COCO images
+    const images = imagesData.map((img, index) => ({
       id: index + 1,
-      file_name: img.url, 
+      file_name: img.url,
       width: img.width ?? 0,
       height: img.height ?? 0,
+      _imageId: img.id,
     }));
 
-    const imageIdMap = new Map(
-      thumbnails.map((img: ImageThumbnail, index: number) => [img.id, index + 1])
+    const imgMap = new Map(
+      images.map((i) => [i._imageId, i.id])
     );
 
+    // 6. COCO annotations
     let annId = 1;
-    const annotations: any[] = [];
+    const annotations = annData.map((a) => ({
+      id: annId++,
+      image_id: imgMap.get(a.image_id),
+      category_id: catMap.get(a.label_id),
+      bbox: [a.x, a.y, a.width, a.height],
+      area: a.width * a.height,
+      iscrowd: 0,
+    }));
 
-    thumbnails.forEach((img: ImageThumbnail, index: number) => {
-      const imageId = imageIdMap.get(img.id);
-      const anns = boxes[img.id] || [];
-
-      anns.forEach((b: BoundingBox) => {
-        annotations.push({
-          id: annId++,
-          image_id: imageId,
-          category_id: categoryIdMap.get(b.label),
-          bbox: [b.x, b.y, b.width, b.height],
-          area: b.width * b.height,
-          iscrowd: 0,
-        });
-      });
-    });
+    // Cleanup COCO output
+    const cleanCategories = categories.map(({ _labelId, ...rest }) => rest);
+    const cleanImages = images.map(({ _imageId, ...rest }) => rest);
 
     const coco = {
       info: {
@@ -75,9 +78,9 @@ export async function POST(req: Request) {
         date_created: new Date().toISOString(),
       },
       licenses: [],
-      images,
+      images: cleanImages,
       annotations,
-      categories,
+      categories: cleanCategories,
     };
 
     const json = JSON.stringify(coco, null, 2);
@@ -86,16 +89,11 @@ export async function POST(req: Request) {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="coco-export-${new Date()
-          .toISOString()
-          .split("T")[0]}.json"`,
+        "Content-Disposition": `attachment; filename="dataset-${datasetId}.json"`,
       },
     });
   } catch (err: any) {
-    console.error("COCO export error:", err);
-    return NextResponse.json(
-    { error: err?.message ?? "Unknown export error" },
-    { status: 500 }
-    );
+    console.error("EXPORT ERROR:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -33,40 +33,43 @@ export async function POST(
     const { boxes, userId } = await req.json();
 
     if (!userId) {
+      return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    }
+
+    const { data: imageRow, error: imgErr } = await supabaseServer
+      .from("images")
+      .select("dataset_id")
+      .eq("id", imageId)
+      .single();
+
+    if (imgErr || !imageRow?.dataset_id) {
       return NextResponse.json(
-        { error: "Missing userId" },
+        { error: "Image dataset not found" },
         { status: 400 }
       );
     }
 
-    // DELETE old annotations
-    const { error: delErr } = await supabaseServer
+    const datasetId = imageRow.dataset_id;
+
+    await supabaseServer
       .from("annotations")
       .delete()
       .eq("image_id", imageId);
-
-    if (delErr) {
-      console.error("Delete annotation error:", delErr);
-      return NextResponse.json({ error: delErr.message }, { status: 500 });
-    }
-
-    // If empty, we're done
     if (!boxes || boxes.length === 0) {
       return NextResponse.json({ success: true });
     }
 
-    // Build new rows
     const payload = boxes.map((b: any) => ({
       image_id: imageId,
+      dataset_id: datasetId,
       user_id: userId,
-      label: b.label,
+      label: b.label,   
       x: b.x,
       y: b.y,
       width: b.width,
       height: b.height,
     }));
 
-    // INSERT
     const { error: insErr } = await supabaseServer
       .from("annotations")
       .insert(payload);
@@ -81,3 +84,4 @@ export async function POST(
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
