@@ -102,8 +102,7 @@ function DashboardContent() {
 
     await waitForSave();
     const payload = {
-      thumbnails,
-      boxes,
+      datasetId: selectedDatasetId,
     };
 
     const res = await fetch("/api/export", {
