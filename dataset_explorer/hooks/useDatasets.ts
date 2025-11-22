@@ -10,7 +10,11 @@ export function useDatasets() {
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const loadDatasets = (userId: string, selectedId?: string, onSelect?: (id: string) => void) => {
+  const loadDatasets = (
+    userId: string,
+    selectedId?: string,
+    onSelect?: (id: string) => void,
+  ) => {
     if (!userId) return;
     setMessage(null);
     const task = (async () => {
@@ -29,7 +33,9 @@ export function useDatasets() {
     })();
 
     startTransition(() => {
-      task.catch((err) => {console.error("Error loading datasets:", err);});
+      task.catch((err) => {
+        console.error("Error loading datasets:", err);
+      });
     });
     return task;
   };

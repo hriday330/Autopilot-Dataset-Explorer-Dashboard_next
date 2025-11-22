@@ -42,15 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getUser();
 
     // Listen to auth state changes and update user
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-      if (event === 'SIGNED_IN') {
-        setUser(session?.user ?? null);
-      }
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!mounted) return;
+        if (event === "SIGNED_IN") {
+          setUser(session?.user ?? null);
+        }
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+        }
+      },
+    );
 
     return () => {
       mounted = false;
@@ -61,7 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextValue = {
     user,
     loading,
-    refresh: async () => { setLoading(true); await getUser(); }
+    refresh: async () => {
+      setLoading(true);
+      await getUser();
+    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

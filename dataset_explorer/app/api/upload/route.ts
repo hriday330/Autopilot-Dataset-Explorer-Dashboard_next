@@ -18,16 +18,19 @@ export async function POST(req: Request) {
     const files = form.getAll("files") as File[];
 
     if (!datasetId || !datasetName || !userId) {
-      return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Missing fields" },
+        { status: 400 },
+      );
     }
 
     const file = files[0];
-    
+
     if (file.name.endsWith(".zip")) {
       const zipBuf = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(zipBuf);
 
-      const entries = Object.values(zip.files).filter(f => {
+      const entries = Object.values(zip.files).filter((f) => {
         const lower = f.name.toLowerCase();
         return (
           !f.dir &&
@@ -42,7 +45,7 @@ export async function POST(req: Request) {
       const rows: any[] = [];
 
       await Promise.all(
-        entries.map(entry =>
+        entries.map((entry) =>
           limit(async () => {
             const blob = await entry.async("nodebuffer");
             const filename = entry.name.split("/").pop()!;
@@ -52,31 +55,34 @@ export async function POST(req: Request) {
 
             try {
               compressed = await sharp(blob)
-                .rotate() 
+                .rotate()
                 .resize({ width: 2000, withoutEnlargement: true }) // better network perf
                 .webp({
                   quality: 70,
-                  effort: 5,     
+                  effort: 5,
                 })
                 .toBuffer();
             } catch (err) {
-              console.error("Sharp compression failed, falling back to raw buffer:", err);
-              compressed = blob; 
+              console.error(
+                "Sharp compression failed, falling back to raw buffer:",
+                err,
+              );
+              compressed = blob;
             }
-              const { error: uploadErr } = await supabaseServer.storage
-                .from("datasets")
-                .upload(storagePath, compressed, { upsert: true });
+            const { error: uploadErr } = await supabaseServer.storage
+              .from("datasets")
+              .upload(storagePath, compressed, { upsert: true });
 
-              if (uploadErr) throw uploadErr;
+            if (uploadErr) throw uploadErr;
 
-              rows.push({
-                dataset_id: datasetId,
-                storage_path: storagePath,
-                width: null,
-                height: null,
-              });
-          })
-        )
+            rows.push({
+              dataset_id: datasetId,
+              storage_path: storagePath,
+              width: null,
+              height: null,
+            });
+          }),
+        ),
       );
 
       const inserted: any[] = [];
@@ -84,7 +90,10 @@ export async function POST(req: Request) {
       // Batch DB insert
       for (let i = 0; i < rows.length; i += BATCH) {
         const batch = rows.slice(i, i + BATCH);
-        const { data, error } = await supabaseServer.from("images").insert(batch).select();
+        const { data, error } = await supabaseServer
+          .from("images")
+          .insert(batch)
+          .select();
 
         if (error) throw error;
         inserted.push(...data);
@@ -133,6 +142,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, thumbnails });
   } catch (err: any) {
     console.error(err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 500 },
+    );
   }
 }

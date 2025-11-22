@@ -19,7 +19,9 @@ export function Sidebar({
   labels,
   onManageLabelsClick,
 }: SidebarProps) {
-  const [activeLabels, setActiveLabels] = useState<string[]>(labels.map(l => l.id));
+  const [activeLabels, setActiveLabels] = useState<string[]>(
+    labels.map((l) => l.id),
+  );
   const [activeTool, setActiveTool] = useState("Bounding Box");
 
   const labelingTools = [
@@ -36,19 +38,18 @@ export function Sidebar({
   ];
 
   const toggleLabel = (id: string) => {
-    setActiveLabels(prev =>
-      prev.includes(id)
-        ? prev.filter(l => l !== id)
-        : [...prev, id]
+    setActiveLabels((prev) =>
+      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id],
     );
   };
 
   return (
     <aside className="w-[260px] bg-[#0E0E0E] border-r border-[#1F1F1F] flex flex-col">
-
       {/* Tools */}
       <div className="p-4 border-b border-[#1F1F1F]">
-        <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Labeling Tools</h3>
+        <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">
+          Labeling Tools
+        </h3>
         <div className="space-y-2">
           {labelingTools.map((tool) => {
             const Icon = tool.icon;
@@ -85,7 +86,9 @@ export function Sidebar({
 
       {/* Labels */}
       <div className="p-4 border-b border-[#1F1F1F]">
-        <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Active Labels</h3>
+        <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">
+          Active Labels
+        </h3>
 
         <div className="space-y-3">
           {labels.map((label) => {
@@ -101,13 +104,21 @@ export function Sidebar({
                     toggleLabel(label.id);
                     onLabelIdSelect(label.id);
                   }}
-                  className={isActive ? "border-[#E82127] data-[state=checked]:bg-[#E82127]" : "border-[#1F1F1F]"}
+                  className={
+                    isActive
+                      ? "border-[#E82127] data-[state=checked]:bg-[#E82127]"
+                      : "border-[#1F1F1F]"
+                  }
                 />
 
                 <label
                   htmlFor={label.id}
                   className={`text-sm cursor-pointer ${
-                    isSelected ? "text-[#E82127]" : isActive ? "text-[#E5E5E5]" : "text-[#A3A3A3]"
+                    isSelected
+                      ? "text-[#E82127]"
+                      : isActive
+                        ? "text-[#E5E5E5]"
+                        : "text-[#A3A3A3]"
                   }`}
                 >
                   {label.name}
@@ -121,11 +132,15 @@ export function Sidebar({
 
       {/* Shortcuts */}
       <div className="p-4 flex-1">
-        <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">Keyboard Shortcuts</h3>
+        <h3 className="text-xs uppercase tracking-wider text-[#A3A3A3] mb-3">
+          Keyboard Shortcuts
+        </h3>
         <div className="space-y-2">
           {shortcuts.map((shortcut, index) => (
             <div key={index} className="flex items-center justify-between">
-              <span className="text-xs text-[#A3A3A3]">{shortcut.description}</span>
+              <span className="text-xs text-[#A3A3A3]">
+                {shortcut.description}
+              </span>
               <div className="flex gap-1">
                 {shortcut.keys.map((key, i) => (
                   <kbd

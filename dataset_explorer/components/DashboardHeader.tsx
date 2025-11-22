@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, Clock, User, Download, Trash2, Tag, BarChart3, FolderOpen } from "lucide-react";
+import {
+  Bell,
+  Clock,
+  User,
+  Download,
+  Trash2,
+  Tag,
+  BarChart3,
+  FolderOpen,
+} from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -13,11 +22,16 @@ interface DashboardHeaderProps {
   onViewChange: (view: "labeling" | "analytics") => void;
 }
 
-export function DashboardHeader({ onExport, onClear, currentView, onViewChange }: DashboardHeaderProps) {
-  const currentTime = new Date().toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: false 
+export function DashboardHeader({
+  onExport,
+  onClear,
+  currentView,
+  onViewChange,
+}: DashboardHeaderProps) {
+  const currentTime = new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
   // Read auth state from context
   const { user, loading } = useUser();
@@ -27,7 +41,9 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
           <div className="w-1 h-8 bg-[#E82127] rounded-full"></div>
-          <h1 className="text-[#E5E5E5] tracking-tight">Autopilot Dataset Explorer</h1>
+          <h1 className="text-[#E5E5E5] tracking-tight">
+            Autopilot Dataset Explorer
+          </h1>
         </div>
 
         {/* View Tabs */}
@@ -35,8 +51,8 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
           <button
             onClick={() => onViewChange("labeling")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded transition-colors text-sm ${
-              currentView === "labeling" 
-                ? "bg-[#E82127] text-white" 
+              currentView === "labeling"
+                ? "bg-[#E82127] text-white"
                 : "text-[#A3A3A3] hover:text-[#E5E5E5]"
             }`}
           >
@@ -46,8 +62,8 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
           <button
             onClick={() => onViewChange("analytics")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded transition-colors text-sm ${
-              currentView === "analytics" 
-                ? "bg-[#E82127] text-white" 
+              currentView === "analytics"
+                ? "bg-[#E82127] text-white"
                 : "text-[#A3A3A3] hover:text-[#E5E5E5]"
             }`}
           >
@@ -56,7 +72,7 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
           </button>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-3">
         <Button
           onClick={onExport}
@@ -89,17 +105,21 @@ export function DashboardHeader({ onExport, onClear, currentView, onViewChange }
           <Bell className="w-5 h-5 text-[#A3A3A3]" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#E82127] rounded-full"></span>
         </button>
-        
-        
+
         {/* Profile: show sign-in button if not signed in */}
         {loading ? (
           <div className="p-2 bg-[#1F1F1F] rounded-lg w-9 h-9" />
         ) : !user ? (
           <Link href="/auth/login" className="text-sm">
-            <Button className="bg-transparent border border-[#1F1F1F] text-[#A3A3A3] hover:text-[#E5E5E5] h-9 px-3">Sign in</Button>
+            <Button className="bg-transparent border border-[#1F1F1F] text-[#A3A3A3] hover:text-[#E5E5E5] h-9 px-3">
+              Sign in
+            </Button>
           </Link>
         ) : (
-          <Link href="/profile" className="p-2 bg-[#1F1F1F] hover:bg-[#2A2A2A] rounded-lg transition-colors">
+          <Link
+            href="/profile"
+            className="p-2 bg-[#1F1F1F] hover:bg-[#2A2A2A] rounded-lg transition-colors"
+          >
             <User className="w-5 h-5 text-[#E5E5E5]" />
           </Link>
         )}

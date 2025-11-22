@@ -18,20 +18,20 @@ export function useLabelClasses(datasetId: string | null) {
     setError(null);
 
     const { data, error } = await supabase
-        .from("label_classes")
-        .select("*")
-        .eq("dataset_id", datasetId)
-        .order("order_index");
+      .from("label_classes")
+      .select("*")
+      .eq("dataset_id", datasetId)
+      .order("order_index");
 
     if (reqId !== requestRef.current) {
-        // ignore out-of-date response
-        return;
+      // ignore out-of-date response
+      return;
     }
 
     if (error) {
-        setError(error.message);
+      setError(error.message);
     } else {
-        setLabels(data || []);
+      setLabels(data || []);
     }
 
     setLoading(false);
@@ -109,38 +109,39 @@ export function useLabelClasses(datasetId: string | null) {
     [loadLabels],
   );
 
-  const deleteLabel = useCallback( async (labelId: string) => {
-    if (!datasetId) return;
+  const deleteLabel = useCallback(
+    async (labelId: string) => {
+      if (!datasetId) return;
 
-    // 1) remove annotations with this label
-    const { error: annErr } = await supabase
-    .from("annotations")
-    .delete()
-    .eq("label_id", labelId);
+      // 1) remove annotations with this label
+      const { error: annErr } = await supabase
+        .from("annotations")
+        .delete()
+        .eq("label_id", labelId);
 
-    if (annErr) {
-    setError(annErr.message);
-    return;
-    }
+      if (annErr) {
+        setError(annErr.message);
+        return;
+      }
 
-    setLabels(prev => prev.filter(l => l.id !== labelId));
+      setLabels((prev) => prev.filter((l) => l.id !== labelId));
 
-    // 2) delete the label class
-    const { error: labelErr } = await supabase
-    .from("label_classes")
-    .delete()
-    .eq("id", labelId);
+      // 2) delete the label class
+      const { error: labelErr } = await supabase
+        .from("label_classes")
+        .delete()
+        .eq("id", labelId);
 
-    if (labelErr) {
-    setError(labelErr.message);
-    return;
-    }
+      if (labelErr) {
+        setError(labelErr.message);
+        return;
+      }
 
-    // 3) reload updated label list
-    loadLabels();
-    },[datasetId, loadLabels],
-    );
-
+      // 3) reload updated label list
+      loadLabels();
+    },
+    [datasetId, loadLabels],
+  );
 
   const reorderLabels = useCallback(
     async (orderedIds: string[]) => {

@@ -40,7 +40,7 @@ export default function DatasetSelector({
 
   const selectedDataset = useMemo(
     () => datasets.find((d) => d.id === selected) ?? null,
-    [datasets, selected]
+    [datasets, selected],
   );
 
   return (

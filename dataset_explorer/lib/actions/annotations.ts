@@ -19,9 +19,8 @@ export async function fetchAnnotationsForImage(imageId: string) {
 export async function saveAnnotationsForImage(
   imageId: string,
   boxes: any[],
-  userId: string
+  userId: string,
 ) {
-
   const { error: delErr } = await supabaseServer
     .from("annotations")
     .delete()

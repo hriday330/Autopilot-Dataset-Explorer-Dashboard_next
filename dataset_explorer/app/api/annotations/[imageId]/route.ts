@@ -3,7 +3,7 @@ import { supabaseServer } from "@lib/supabaseServer";
 
 export async function GET(
   req: Request,
-  { params }: { params: { imageId: string } }
+  { params }: { params: { imageId: string } },
 ) {
   try {
     const imageId = params.imageId;
@@ -15,18 +15,24 @@ export async function GET(
 
     if (error) {
       console.error("Fetch annotations error:", error);
-      return NextResponse.json({ annotations: [], error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { annotations: [], error: error.message },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ annotations: data ?? [] });
   } catch (err: any) {
-    return NextResponse.json({ annotations: [], error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { annotations: [], error: err.message },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(
   req: Request,
-  { params }: { params: { imageId: string } }
+  { params }: { params: { imageId: string } },
 ) {
   try {
     const imageId = params.imageId;
@@ -45,16 +51,13 @@ export async function POST(
     if (imgErr || !imageRow?.dataset_id) {
       return NextResponse.json(
         { error: "Image dataset not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const datasetId = imageRow.dataset_id;
 
-    await supabaseServer
-      .from("annotations")
-      .delete()
-      .eq("image_id", imageId);
+    await supabaseServer.from("annotations").delete().eq("image_id", imageId);
     if (!boxes || boxes.length === 0) {
       return NextResponse.json({ success: true });
     }
@@ -63,7 +66,7 @@ export async function POST(
       image_id: imageId,
       dataset_id: datasetId,
       user_id: userId,
-      label: b.label,   
+      label: b.label,
       x: b.x,
       y: b.y,
       width: b.width,
@@ -84,4 +87,3 @@ export async function POST(
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
-

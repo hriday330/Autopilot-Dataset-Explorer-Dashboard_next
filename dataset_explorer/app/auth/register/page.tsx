@@ -26,16 +26,16 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const {
-        data,
-        error: signUpError
-      } = await supabase.auth.signUp({ email, password });
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
       if (signUpError) {
         setError(signUpError.message);
       } else {
         setSuccess(
-          "Registration successful. If your email requires confirmation, please check your inbox."
+          "Registration successful. If your email requires confirmation, please check your inbox.",
         );
         setEmail("");
         setPassword("");
@@ -51,13 +51,19 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#0E0E0E] p-6">
       <div className="w-full max-w-md bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
         <h1 className="text-2xl text-white mb-4">Create an account</h1>
-        <p className="text-sm text-[#A3A3A3] mb-4">Register with your email and a password.</p>
+        <p className="text-sm text-[#A3A3A3] mb-4">
+          Register with your email and a password.
+        </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/30 text-red-300 rounded">{error}</div>
+          <div className="mb-4 p-3 bg-red-900/30 text-red-300 rounded">
+            {error}
+          </div>
         )}
         {success && (
-          <div className="mb-4 p-3 bg-green-900/30 text-green-300 rounded">{success}</div>
+          <div className="mb-4 p-3 bg-green-900/30 text-green-300 rounded">
+            {success}
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,7 +99,10 @@ export default function RegisterPage() {
             >
               {loading ? "Creating..." : "Create account"}
             </button>
-            <Link href="/auth/login" className="text-sm text-[#A3A3A3] hover:text-white">
+            <Link
+              href="/auth/login"
+              className="text-sm text-[#A3A3A3] hover:text-white"
+            >
               Have an account?
             </Link>
           </div>
