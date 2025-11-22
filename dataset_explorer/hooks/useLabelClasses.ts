@@ -88,6 +88,8 @@ export function useLabelClasses(datasetId: string | null) {
       setLabels((prev) =>
         prev.map((l) => (l.id === tempId ? (data as Label) : l)),
       );
+
+      return data as Label;
     },
     [datasetId, labels],
   );
@@ -117,7 +119,7 @@ export function useLabelClasses(datasetId: string | null) {
       const { error: annErr } = await supabase
         .from("annotations")
         .delete()
-        .eq("label_id", labelId);
+        .eq("label", labelId);
 
       if (annErr) {
         setError(annErr.message);
