@@ -38,18 +38,16 @@ interface ManageLabelsModalProps {
 }
 
 function SortableLabelRow({
-  label,
   draft,
   setDraft,
   deleteLabel,
 }: {
-  label: Label;
   draft: Label;
   setDraft: (updates: Partial<Label>) => void;
   deleteLabel: (id: string) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: label.id });
+    useSortable({ id: draft.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -64,15 +62,10 @@ function SortableLabelRow({
       style={style}
       className="flex items-center gap-3 px-3 py-2 rounded-md bg-[#141414] border border-[#262626]"
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab text-[#555]"
-      >
+      <button {...attributes} {...listeners} className="cursor-grab text-[#555]">
         <GripVertical className="w-4 h-4" />
       </button>
 
-      {/* Color Picker */}
       <Popover open={colorOpen} onOpenChange={setColorOpen}>
         <PopoverTrigger asChild>
           <button
@@ -83,22 +76,20 @@ function SortableLabelRow({
 
         <PopoverContent className="bg-[#0E0E0E] border border-[#1F1F1F] p-3 rounded-lg">
           <HexColorPicker
-            color={draft.color}
+            color={draft?.color ?? "#E82127"}
             onChange={(newColor) => setDraft({ color: newColor })}
           />
         </PopoverContent>
       </Popover>
 
-      {/* Name Input */}
       <Input
         value={draft.name}
         onChange={(e) => setDraft({ name: e.target.value })}
         className="flex-1 bg-[#0E0E0E] border-[#333] text-white"
       />
 
-      {/* Delete */}
       <button
-        onClick={() => deleteLabel(label.id)}
+        onClick={() => deleteLabel(draft.id)}
         className="p-1 text-red-400 hover:text-red-300"
       >
         <Trash2 className="w-4 h-4" />
@@ -106,6 +97,7 @@ function SortableLabelRow({
     </div>
   );
 }
+
 
 export function ManageLabelsModal({
   open,
@@ -208,7 +200,6 @@ export function ManageLabelsModal({
                   return (
                     <SortableLabelRow
                       key={id}
-                      label={labels.find((l) => l.id === id)!}
                       draft={draft}
                       setDraft={(updates) => updateLocal(id, updates)}
                       deleteLabel={deleteLabel}
