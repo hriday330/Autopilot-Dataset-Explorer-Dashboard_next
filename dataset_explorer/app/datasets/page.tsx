@@ -107,104 +107,109 @@ export default function DatasetsPage() {
 
   return (
     <div className="min-h-screen p-8 bg-[#0E0E0E]">
-      <div className="max-w-4xl mx-auto bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
-        {initialLoading ? (
-          <Spinner text="Loading your datasets" />
-        ) : (
-          <>
-            <h2 className="text-2xl text-white mb-4">Your datasets</h2>
-            {message && (
-              <Alert
-                variant="destructive"
-                className="mb-4 border-red-600/50 bg-red-950/40 text-red-300"
-              >
-                <AlertDescription>{message}</AlertDescription>
-              </Alert>
-            )}
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* CARD 1 — DATASET CONTROLS */}
+        <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
+          <h2 className="text-2xl text-white mb-4">Your datasets</h2>
 
-            <DatasetSelector
-              datasets={datasets}
-              counts={counts}
-              selected={selected}
-              onSelect={setSelected}
-            />
+          {message && (
+            <Alert
+              variant="destructive"
+              className="mb-4 border-red-600/50 bg-red-950/40 text-red-300"
+            >
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
 
-            <DatasetCreation
-              newName={newName}
-              setNewName={setNewName}
-              onCreate={handleCreateDataset}
-            />
+          <DatasetSelector
+            datasets={datasets}
+            counts={counts}
+            selected={selected}
+            onSelect={setSelected}
+          />
 
-            <FileUploader
-              onSelect={async (files) => {
-                const ds = datasets.find((d) => d.id === selected);
-                if (!ds || !user) return;
-                await handleUploadFiles(
-                  files,
-                  selected,
-                  ds.name,
-                  user.id,
-                  (newThumbnails) => {
-                    setThumbnails((prev) => [...newThumbnails, ...prev]);
-                    setImagesTotal((prev) => prev + newThumbnails.length);
-                    cache.invalidate(selected);
-                  },
-                );
-              }}
-              accept="image/*,.zip"
-              maxFiles={1}
-              allowZip={true}
-              uploading={uploading}
-              label="Upload Image or ZIP"
-              description="Upload one image or a ZIP containing multiple images."
-            />
+          <DatasetCreation
+            newName={newName}
+            setNewName={setNewName}
+            onCreate={handleCreateDataset}
+          />
 
-            {uploading && (
-              <Progress className="my-2" value={uploadProgress * 100} />
-            )}
+          <FileUploader
+            onSelect={async (files) => {
+              const ds = datasets.find((d) => d.id === selected);
+              if (!ds || !user) return;
 
-            {processingZip && (
-              <div className="flex items-center gap-2 text-sm text-[#A3A3A3] my-4">
-                <Spinner/>
-                <span>Processing ZIP file, this may take a moment...</span>
-              </div>
-            )}
+              await handleUploadFiles(
+                files,
+                selected,
+                ds.name,
+                user.id,
+                (newThumbnails) => {
+                  setThumbnails((prev) => [...newThumbnails, ...prev]);
+                  setImagesTotal((prev) => prev + newThumbnails.length);
+                  cache.invalidate(selected);
+                },
+              );
+            }}
+            accept="image/*,.zip"
+            maxFiles={1}
+            allowZip={true}
+            uploading={uploading}
+            label="Upload Image or ZIP"
+            description="Upload one image or a ZIP containing multiple images."
+          />
 
-            {/* Thumbnail Grid */}
-            {imagesLoading ? (
-              <Spinner text="Loading your images" />
-            ) : !selected ? (
-              <div className="mb-6">
-                <div className="text-sm text-[#A3A3A3] mb-2">
-                  Images in selected dataset
-                </div>
-                <div className="text-sm text-[#6B6B6B]">
-                  Select a dataset to view images.
-                </div>
-              </div>
-            ) : (
-              <DatasetImageGrid
-                thumbnails={thumbnails}
-                deletingIds={deletingIds}
-                imagesPage={imagesPage}
-                imagesTotal={imagesTotal}
-                imagesPerPage={imagesPerPage}
-                onDelete={handleDeleteImage}
-                onPrevPage={() => setImagesPage((p) => Math.max(1, p - 1))}
-                onNextPage={() => setImagesPage((p) => p + 1)}
-              />
-            )}
+          {uploading && (
+            <Progress className="my-2" value={uploadProgress * 100} />
+          )}
 
-            <div className="mt-6">
-              <Button
-                variant="outline"
-                className="border-[#1F1F1F] text-[#A3A3A3]"
-                onClick={() => router.push(`/?dataset=${selected}`)}
-              >
-                Annotate this dataset
-              </Button>
+          {processingZip && (
+            <div className="flex items-center gap-2 text-sm text-[#A3A3A3] my-4">
+              <Spinner />
+              <span>Processing ZIP file, this may take a moment...</span>
             </div>
-          </>
+          )}
+        </div>
+
+        {/* CARD 2 — IMAGES GRID */}
+        <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
+          <h3 className="text-xl text-white mb-4">Images in dataset</h3>
+
+          {imagesLoading ? (
+            <Spinner text="Loading your images" />
+          ) : !selected ? (
+            <div className="text-sm text-[#6B6B6B]">
+              Select a dataset to view images.
+            </div>
+          ) : (
+            <DatasetImageGrid
+              thumbnails={thumbnails}
+              deletingIds={deletingIds}
+              imagesPage={imagesPage}
+              imagesTotal={imagesTotal}
+              imagesPerPage={imagesPerPage}
+              onDelete={handleDeleteImage}
+              onPrevPage={() => setImagesPage((p) => Math.max(1, p - 1))}
+              onNextPage={() => setImagesPage((p) => p + 1)}
+            />
+          )}
+        </div>
+
+        {/* CARD 3 — ACTIONS */}
+        {selected && (
+          <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6 flex justify-between items-center">
+            <div className="text-sm text-[#A3A3A3]">
+              Ready to annotate this dataset?
+            </div>
+
+            <Button
+              variant="outline"
+              className="border-[#1F1F1F] text-[#A3A3A3]"
+              onClick={() => router.push(`/?dataset=${selected}`)}
+            >
+              Annotate this dataset
+            </Button>
+          </div>
         )}
       </div>
     </div>
