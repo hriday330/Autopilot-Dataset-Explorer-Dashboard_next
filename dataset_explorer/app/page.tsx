@@ -55,6 +55,13 @@ function DashboardContent() {
   }, [labels]);
 
   useEffect(() => {
+    if (labels.length === 1 && selectedLabelId !== labels[0].id) {
+      setSelectedLabelId(labels[0].id);
+    }
+  }, [labels, selectedLabelId]);
+
+
+  useEffect(() => {
     if (!user) return;
 
     // If URL provided dataset, use it
@@ -182,7 +189,11 @@ function DashboardContent() {
 
         <div className="flex-1 flex flex-col overflow-auto">
           {currentView === "labeling" ? (
-            thumbnails.length > 0 ? (
+            labels.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-[#A3A3A3]">
+                You must create at least one label before annotating.
+              </div>
+            ) : thumbnails.length > 0 ? (
               <ImageViewer
                 labels={labels}
                 frame={thumbnails[currentFrame]}
