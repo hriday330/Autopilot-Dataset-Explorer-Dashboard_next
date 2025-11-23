@@ -28,7 +28,6 @@ export default function DatasetsPage() {
     datasets,
     counts,
     loadDatasets,
-    setMessage: setDatasetMessage,
     message: datasetMessage,
   } = useDatasets();
 
@@ -49,6 +48,7 @@ export default function DatasetsPage() {
     deletingIds,
     handleDeleteImage: deleteImageHandler,
     handleCreateDataset: createDatasetHandler,
+    processingZip,
     handleUploadFiles,
     message: opMessage,
     uploadProgress,
@@ -161,6 +161,13 @@ export default function DatasetsPage() {
 
             {uploading && (
               <Progress className="my-2" value={uploadProgress * 100} />
+            )}
+
+            {processingZip && (
+              <div className="flex items-center gap-2 text-sm text-[#A3A3A3] my-4">
+                <Spinner/>
+                <span>Processing ZIP file, this may take a moment...</span>
+              </div>
             )}
 
             {/* Thumbnail Grid */}
