@@ -18,7 +18,6 @@ import DatasetCreation from "@components/DatasetCreation";
 export default function DatasetsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
-  const [selected, setSelected] = React.useState<string>("");
   const [newName, setNewName] = React.useState("");
   const [imagesPage, setImagesPage] = React.useState(1);
   const [imagesPerPage] = React.useState(12);
@@ -27,7 +26,10 @@ export default function DatasetsPage() {
   const {
     datasets,
     counts,
+    selected, 
+    setSelected,
     loadDatasets,
+    createDataset,
     message: datasetMessage,
   } = useDatasets();
 
@@ -47,7 +49,6 @@ export default function DatasetsPage() {
     uploading,
     deletingIds,
     handleDeleteImage: deleteImageHandler,
-    handleCreateDataset: createDatasetHandler,
     processingZip,
     handleUploadFiles,
     message: opMessage,
@@ -71,6 +72,8 @@ export default function DatasetsPage() {
     }
   }, [user, loading, router]);
 
+
+  // initial load of datasets
   useEffect(() => {
     if (!user) return;
     if (initialLoading) {
@@ -84,6 +87,7 @@ export default function DatasetsPage() {
 
   useEffect(() => {
     if (!selected) {
+      // TODO: remove this - set state shouldn't happen in useEffect like this
       setThumbnails([]);
       setImagesTotal(0);
       return;
@@ -101,7 +105,7 @@ export default function DatasetsPage() {
 
   const handleCreateDataset = () => {
     if (!newName || !user) return;
-    createDatasetHandler(newName, user.id);
+    createDataset(newName, user.id);
     setNewName("");
   };
 
@@ -204,8 +208,7 @@ export default function DatasetsPage() {
 
             <Button
               variant="outline"
-              className="border-[#1F1F1F] text-[#A3A3A3]"
-              onClick={() => router.push(`/?dataset=${selected}`)}
+              className="border-[#2A2A2A] bg-[#1A1A1A] text-[#D4D4D4] hover:bg-[#222]"
             >
               Annotate this dataset
             </Button>

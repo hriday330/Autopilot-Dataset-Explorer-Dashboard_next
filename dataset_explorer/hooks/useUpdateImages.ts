@@ -40,20 +40,6 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     });
   };
 
-  const handleCreateDataset = async (name: string, userId: string) => {
-    if (!name || !userId) return;
-    setMessage(null);
-    startTransition(async () => {
-      const result = await createDatasetAction(name, userId);
-      if (result.error) {
-        setMessage(`Error: ${result.error}`);
-      } else {
-        setMessage("Dataset created");
-        handlers.onUploadComplete?.();
-      }
-    });
-  };
-
   const handleUploadFiles = async (
     files: FileList | null,
     datasetId: string,
@@ -156,7 +142,6 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     message,
     setMessage,
     handleDeleteImage,
-    handleCreateDataset,
     handleUploadFiles,
     isPending,
     uploadProgress,
