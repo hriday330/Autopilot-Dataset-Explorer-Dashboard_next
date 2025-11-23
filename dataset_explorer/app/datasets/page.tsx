@@ -246,6 +246,7 @@ export default function DatasetsPage() {
 
             <Button
               variant="outline"
+              onClick={() => router.push(`/?dataset=${selected}`)}
               className="border-[#2A2A2A] bg-[#1A1A1A] text-[#D4D4D4] hover:bg-[#222]"
             >
               Annotate this dataset
