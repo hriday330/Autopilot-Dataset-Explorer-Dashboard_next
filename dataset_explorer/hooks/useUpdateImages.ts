@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createDatasetAction, deleteImageAction } from "@lib/actions/dataset";
+import { deleteImageAction } from "@lib/actions/dataset";
 import { supabase } from "@lib/supabaseClient";
 import { uploadWithProgress } from "@lib/uploadWithProgress";
-import { ImageThumbnail } from "@lib/types";
+import type { ImageThumbnail, OperationMessage } from "@lib/types";
 
 interface ImageOperationsHandlers {
   onDeleteComplete?: () => void;
@@ -14,7 +14,7 @@ interface ImageOperationsHandlers {
 export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   const [uploading, setUploading] = useState(false);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<OperationMessage>(null);
   const [isPending, startTransition] = useTransition();
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [processingZip, setProcessingZip] = useState(false);
@@ -26,31 +26,25 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   ) => {
     setDeletingIds((prev) => [...prev, imageId]);
     setMessage(null);
+
     startTransition(async () => {
       const result = await deleteImageAction(imageId, storagePath);
+
       if (result.error) {
-        setMessage(`Delete error: ${result.error}`);
+        setMessage({
+          message: `Delete error: ${result.error}`,
+          type: "error",
+        });
       } else {
-        setMessage("Image deleted");
-        // Optimistic update: remove from current grid immediately
+        setMessage({
+          message: "Image deleted",
+          type: "success",
+        });
         onOptimisticDelete();
         handlers.onDeleteComplete?.();
       }
-      setDeletingIds((prev) => prev.filter((id) => id !== imageId));
-    });
-  };
 
-  const handleCreateDataset = async (name: string, userId: string) => {
-    if (!name || !userId) return;
-    setMessage(null);
-    startTransition(async () => {
-      const result = await createDatasetAction(name, userId);
-      if (result.error) {
-        setMessage(`Error: ${result.error}`);
-      } else {
-        setMessage("Dataset created");
-        handlers.onUploadComplete?.();
-      }
+      setDeletingIds((prev) => prev.filter((id) => id !== imageId));
     });
   };
 
@@ -68,16 +62,14 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
 
     try {
       const fd = new FormData();
-
-      // append files (single OR multiple)
       Array.from(files).forEach((f) => fd.append("files", f));
 
-      // required metadata
       fd.append("datasetId", datasetId);
       fd.append("datasetName", datasetName);
       fd.append("userId", userId);
 
       setUploadProgress(0);
+
       const json = await uploadWithProgress({
         url: "/api/upload",
         formData: fd,
@@ -85,29 +77,35 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
       });
 
       if (!json.success) {
-        setMessage(`Upload error: ${json.error}`);
+        setMessage({
+          message: `Upload error: ${json.error}`,
+          type: "error",
+        });
         return;
       }
 
-      setMessage("Upload complete");
+      setMessage({
+        message: "Upload complete",
+        type: "success",
+      });
 
       if (json.isZip) {
-        // Call Supabase edge function to process the zip
         setProcessingZip(true);
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/process-zip`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
               apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             },
             body: JSON.stringify({
               datasetId,
               datasetName,
               userId,
-              zipPath: json.zipPath
+              zipPath: json.zipPath,
             }),
           },
         );
@@ -116,16 +114,18 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
         setProcessingZip(false);
 
         if (!fx.success) {
-          setMessage("Processing error: " + fx.error);
+          setMessage({
+            message: "Processing error: " + fx.error,
+            type: "error",
+          });
           return;
         }
-        // Notify caller that dataset images changed
+
         handlers.onUploadComplete?.();
         return;
       }
 
       if (!json.isZip) {
-        // Refresh signed URLs in parallel
         const newThumbnails = await Promise.all(
           json.thumbnails.map(async (t) => {
             const { data } = await supabase.storage
@@ -138,13 +138,17 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
             };
           }),
         );
+
         onOptimisticAdd(newThumbnails);
       } else {
         handlers.onUploadComplete?.();
       }
     } catch (err: any) {
       console.error(err);
-      setMessage("Upload error: " + (err?.message ?? String(err)));
+      setMessage({
+        message: "Upload error: " + (err?.message ?? String(err)),
+        type: "error",
+      });
     } finally {
       setUploading(false);
     }
@@ -156,7 +160,6 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     message,
     setMessage,
     handleDeleteImage,
-    handleCreateDataset,
     handleUploadFiles,
     isPending,
     uploadProgress,

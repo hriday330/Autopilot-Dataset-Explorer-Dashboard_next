@@ -108,7 +108,7 @@ export async function fetchImagesForDatasetAction(
 // Create a new dataset
 export async function createDatasetAction(name: string, userId: string) {
   try {
-    const { error } = await supabaseServer
+    const { data, error } = await supabaseServer
       .from("datasets")
       .insert([{ name, user_id: userId }])
       .select()
@@ -116,7 +116,7 @@ export async function createDatasetAction(name: string, userId: string) {
 
     if (error) throw error;
     revalidatePath("/datasets");
-    return { success: true };
+    return { success: true, dataset: data };
   } catch (err: any) {
     return { success: false, error: err?.message ?? String(err) };
   }

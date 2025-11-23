@@ -69,15 +69,14 @@ export default function DatasetSelector({
           <Command className="bg-[#111] text-[#E5E5E5] mt-4">
             <CommandInput
               placeholder="Search datasets..."
-              className="
-                bg-[#111] 
-                text-[#E5E5E5] 
-                placeholder:text-[#666] 
-                border border-[#333]
-              "
             />
 
-            <CommandList className="max-h-80 overflow-y-auto bg-[#111]">
+           <CommandList
+            className="
+              max-h-80 overflow-y-auto bg-[#111]
+              dark-scrollbar
+            "
+            >
               <CommandEmpty>No dataset found.</CommandEmpty>
 
               <CommandGroup>

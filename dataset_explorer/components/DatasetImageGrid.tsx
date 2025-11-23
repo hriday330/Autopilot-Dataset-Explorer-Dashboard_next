@@ -33,9 +33,6 @@ function DatasetImageGrid({
 }: Props) {
   return (
     <div className="mb-6">
-      <div className="text-sm text-[#A3A3A3] mb-2">
-        Images in selected dataset
-      </div>
       {!thumbnails || thumbnails.length === 0 ? (
         <div className="text-sm text-[#6B6B6B]">No images in this dataset.</div>
       ) : (
