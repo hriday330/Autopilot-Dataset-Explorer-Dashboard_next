@@ -3,12 +3,12 @@
 import { useState, useTransition } from "react";
 import { fetchImagesForDatasetAction } from "@lib/actions/dataset";
 import { useDatasetImageCache } from "./useDatasetImageCache";
-import { ImageThumbnail } from "@lib/types";
+import type { ImageThumbnail, OperationMessage } from "@lib/types";
 
 export function useLoadImages() {
   const [thumbnails, setThumbnails] = useState<ImageThumbnail[]>([]);
   const [imagesTotal, setImagesTotal] = useState(0);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<OperationMessage>(null);
   const [isPending, startTransition] = useTransition();
   const cache = useDatasetImageCache();
 
@@ -31,7 +31,7 @@ export function useLoadImages() {
         cache.setCachedPage(datasetId, page, result.thumbnails, result.total);
       }
     } catch {
-      // prefetch errors should be silent
+      // prefetch errors stay silent
     }
   };
 
@@ -41,13 +41,14 @@ export function useLoadImages() {
     perPage: number,
   ) => {
     setMessage(null);
+
     const cached = cache.getCachedThumbnails(datasetId, page);
 
     if (cached) {
       setThumbnails(cached.thumbnails);
       setImagesTotal(cached.total);
 
-      // Prefetch neighbors in background
+      // Prefetch neighbors
       prefetchPage(datasetId, page + 1, perPage);
       prefetchPage(datasetId, page - 1, perPage);
 
@@ -55,14 +56,20 @@ export function useLoadImages() {
     }
 
     setThumbnails([]);
+
     startTransition(async () => {
       const result = await fetchImagesForDatasetAction(
         datasetId,
         page,
         perPage,
       );
+
       if (result.error) {
-        setMessage(`Error loading images: ${result.error}`);
+        setMessage({
+          message: `Error loading images: ${result.error}`,
+          type: "error",
+        });
+
         setThumbnails([]);
         setImagesTotal(0);
       } else {
@@ -72,7 +79,7 @@ export function useLoadImages() {
         // Cache this page
         cache.setCachedPage(datasetId, page, result.thumbnails, result.total);
 
-        // Prefetch neighbors in the background
+        // Prefetch neighbors
         prefetchPage(datasetId, page + 1, perPage);
         prefetchPage(datasetId, page - 1, perPage);
       }

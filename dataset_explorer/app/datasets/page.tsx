@@ -14,10 +14,14 @@ import { Alert, AlertDescription } from "@components/ui/alert";
 import DatasetSelector from "@components/DatasetSelector";
 import { Progress } from "@components/ui/progress";
 import DatasetCreation from "@components/DatasetCreation";
+import { toast } from "sonner";
 
+
+// TODO - refactor this entire page into smaller components
 export default function DatasetsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
+
   const [newName, setNewName] = React.useState("");
   const [imagesPage, setImagesPage] = React.useState(1);
   const [imagesPerPage] = React.useState(12);
@@ -26,7 +30,7 @@ export default function DatasetsPage() {
   const {
     datasets,
     counts,
-    selected, 
+    selected,
     setSelected,
     loadDatasets,
     createDataset,
@@ -67,11 +71,16 @@ export default function DatasetsPage() {
   const message = datasetMessage || imageMessage || opMessage;
 
   useEffect(() => {
+    if (message?.type === "success") {
+      toast.success(message.message);
+    }
+  }, [message, toast]);
+
+  useEffect(() => {
     if (!loading && !user) {
       router.replace("/auth/login");
     }
   }, [user, loading, router]);
-
 
   // initial load of datasets
   useEffect(() => {
@@ -87,7 +96,6 @@ export default function DatasetsPage() {
 
   useEffect(() => {
     if (!selected) {
-      // TODO: remove this - set state shouldn't happen in useEffect like this
       setThumbnails([]);
       setImagesTotal(0);
       return;
@@ -112,16 +120,22 @@ export default function DatasetsPage() {
   return (
     <div className="min-h-screen p-8 bg-[#0E0E0E]">
       <div className="max-w-4xl mx-auto space-y-6">
+
         {/* CARD 1 — DATASET CONTROLS */}
         <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
           <h2 className="text-2xl text-white mb-4">Your datasets</h2>
 
-          {message && (
+
+          {message && message.type !== "success" && (
             <Alert
-              variant="destructive"
-              className="mb-4 border-red-600/50 bg-red-950/40 text-red-300"
+              variant={message.type === "error" ? "destructive" : "default"}
+              className={
+                message.type === "error"
+                  ? "mb-4 border-red-600/50 bg-red-950/40 text-red-300"
+                  : "mb-4 border-blue-600/50 bg-blue-950/40 text-blue-300"
+              }
             >
-              <AlertDescription>{message}</AlertDescription>
+              <AlertDescription>{message.message}</AlertDescription>
             </Alert>
           )}
 

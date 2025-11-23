@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { createDatasetAction, fetchDatasetsAction } from "@lib/actions/dataset";
-import type { Dataset } from "@lib/types";
+import type { Dataset, OperationMessage } from "@lib/types";
 
 export function useDatasets() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<OperationMessage>(null);
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<string>("");
 
@@ -15,38 +15,53 @@ export function useDatasets() {
     if (!name || !userId) return;
 
     setMessage(null);
+
     const result = await createDatasetAction(name, userId);
 
     if (result.error) {
-      setMessage(`Error: ${result.error}`);
+      setMessage({
+        message: `Error: ${result.error}`,
+        type: "error",
+      });
       return;
     }
-    setMessage("Dataset created");
+
+    setMessage({
+      message: "Dataset created",
+      type: "success",
+    });
+
     setSelected(result.dataset.id);
-    
+
     startTransition(() => {
       loadDatasets(userId);
     });
   };
 
-
-  
   const loadDatasets = (
     userId: string,
     selectedId?: string,
     onSelect?: (id: string) => void,
   ) => {
     if (!userId) return;
+
     setMessage(null);
+
     const task = (async () => {
       const result = await fetchDatasetsAction(userId);
+
       if (result.error) {
-        setMessage(`Error: ${result.error}`);
+        setMessage({
+          message: `Error: ${result.error}`,
+          type: "error",
+        });
+
         setDatasets([]);
         setCounts({});
       } else {
         setDatasets(result.datasets);
         setCounts(result.counts);
+
         if (!selectedId && result.datasets.length > 0 && onSelect) {
           console.log("Auto-selecting dataset:", result.datasets[0].id);
           onSelect(result.datasets[0].id);
@@ -59,6 +74,7 @@ export function useDatasets() {
         console.error("Error loading datasets:", err);
       });
     });
+
     return task;
   };
 
@@ -71,6 +87,6 @@ export function useDatasets() {
     createDataset,
     isPending,
     selected,
-    setSelected
+    setSelected,
   };
 }

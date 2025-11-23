@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@styles/globals.css";
 import { AuthProvider } from "@components/AuthProvider";
 import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Autopilot Dataset Explorer",
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body>
         <ReactQueryProvider>
           <AuthProvider>{children}</AuthProvider>
+          <Toaster position="top-right" richColors closeButton />
         </ReactQueryProvider>
       </body>
     </html>

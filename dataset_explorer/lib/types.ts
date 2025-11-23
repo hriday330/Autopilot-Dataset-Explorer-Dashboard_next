@@ -29,3 +29,8 @@ export interface Label {
   order_index?: number;
   created_at: string;
 }
+
+export type OperationMessage = {
+  message: string;
+  type: "success" | "info" | "error";
+} | null;
