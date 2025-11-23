@@ -15,7 +15,7 @@ import DatasetSelector from "@components/DatasetSelector";
 import { Progress } from "@components/ui/progress";
 import DatasetCreation from "@components/DatasetCreation";
 import { toast } from "sonner";
-
+import { X } from "lucide-react";
 
 // TODO - refactor this entire page into smaller components
 export default function DatasetsPage() {
@@ -35,6 +35,7 @@ export default function DatasetsPage() {
     loadDatasets,
     createDataset,
     message: datasetMessage,
+    setMessage: setDatasetMessage,
   } = useDatasets();
 
   const {
@@ -43,7 +44,7 @@ export default function DatasetsPage() {
     imagesTotal,
     setImagesTotal,
     loadImagesForDataset,
-    setMessage: setImageMessage,
+    setMessage: setLoadImagesMessage,
     message: imageMessage,
     isPending: imagesLoading,
     cache,
@@ -56,6 +57,7 @@ export default function DatasetsPage() {
     processingZip,
     handleUploadFiles,
     message: opMessage,
+    setMessage: setUpdateImageMessage,
     uploadProgress,
   } = useUpdateImages({
     onDeleteComplete: () => {
@@ -69,6 +71,12 @@ export default function DatasetsPage() {
   });
 
   const message = datasetMessage || imageMessage || opMessage;
+
+  let dismissMessage: (() => void) | null = null;
+
+  if (datasetMessage) dismissMessage = () => setDatasetMessage(null);
+  else if (imageMessage) dismissMessage = () => setLoadImagesMessage(null);
+  else if (opMessage) dismissMessage = () => setUpdateImageMessage(null);
 
   useEffect(() => {
     if (message?.type === "success") {
@@ -120,22 +128,38 @@ export default function DatasetsPage() {
   return (
     <div className="min-h-screen p-8 bg-[#0E0E0E]">
       <div className="max-w-4xl mx-auto space-y-6">
-
         {/* CARD 1 — DATASET CONTROLS */}
         <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
           <h2 className="text-2xl text-white mb-4">Your datasets</h2>
 
-
           {message && message.type !== "success" && (
             <Alert
               variant={message.type === "error" ? "destructive" : "default"}
-              className={
-                message.type === "error"
-                  ? "mb-4 border-red-600/50 bg-red-950/40 text-red-300"
-                  : "mb-4 border-blue-600/50 bg-blue-950/40 text-blue-300"
-              }
+              className={`
+                    relative mb-4
+                    ${
+                      message.type === "error"
+                        ? "border-red-600/50 bg-red-950/40 text-red-300"
+                        : "border-blue-600/50 bg-blue-950/40 text-blue-300"
+                    }
+                  `}
             >
-              <AlertDescription>{message.message}</AlertDescription>
+              <Button
+                onClick={() => dismissMessage?.()}
+                variant="ghost"
+                size="icon"
+                className="
+                      absolute right-2 top-2
+                      h-6 w-6 p-0
+                      text-[#9CA3AF] hover:text-white
+                      bg-transparent hover:bg-transparent
+                    "
+              >
+                <X size={14} />
+              </Button>
+              <AlertDescription className="pr-10">
+                {message.message}
+              </AlertDescription>
             </Alert>
           )}
 
