@@ -90,6 +90,37 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
 
       setMessage("Upload complete");
 
+      if (json.isZip) {
+        // Call Supabase edge function to process the zip
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/process-zip`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            },
+            body: JSON.stringify({
+              datasetId,
+              datasetName,
+              userId,
+              zipPath: json.zipPath
+            }),
+          },
+        );
+
+        const fx = await res.json();
+
+        if (!fx.success) {
+          setMessage("Processing error: " + fx.error);
+          return;
+        }
+        // Notify caller that dataset images changed
+        handlers.onUploadComplete?.();
+        return;
+      }
+
       if (!json.isZip) {
         // Refresh signed URLs in parallel
         const newThumbnails = await Promise.all(

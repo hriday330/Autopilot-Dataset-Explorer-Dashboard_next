@@ -38,4 +38,5 @@ type UploadResponse = {
   error?: string;
   thumbnails: { id: string; url: string; storage_path: string }[];
   isZip?: boolean;
+  zipPath?: string;
 };

@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@lib/supabaseServer";
-import JSZip from "jszip";
-import pLimit from "p-limit";
-import sharp from "sharp";
-
-const CONCURRENCY = 10;
-const BATCH = 2000;
 
 export const runtime = "nodejs";
+
+// This route ONLY uploads files to storage.
+// ZIPs are not processed here; only stored.
+// The caller then triggers the Edge Function.
 
 export async function POST(req: Request) {
   try {
@@ -20,96 +18,38 @@ export async function POST(req: Request) {
     if (!datasetId || !datasetName || !userId) {
       return NextResponse.json(
         { success: false, error: "Missing fields" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
+    // We handle only ONE ZIP at a time
     const file = files[0];
+    const isZip = file.name.toLowerCase().endsWith(".zip");
 
-    if (file.name.endsWith(".zip")) {
-      const zipBuf = await file.arrayBuffer();
-      const zip = await JSZip.loadAsync(zipBuf);
+    // If ZIP → store it & return zipPath
+    if (isZip) {
+      const zipStoragePath = `${userId}/${datasetName}/${file.name}`;
 
-      const entries = Object.values(zip.files).filter((f) => {
-        const lower = f.name.toLowerCase();
-        return (
-          !f.dir &&
-          (lower.endsWith(".jpg") ||
-            lower.endsWith(".jpeg") ||
-            lower.endsWith(".png") ||
-            lower.endsWith(".webp"))
+      const { error: uploadErr } = await supabaseServer.storage
+        .from("datasets")
+        .upload(zipStoragePath, file, { upsert: true });
+
+      if (uploadErr) {
+        return NextResponse.json(
+          { success: false, error: uploadErr.message },
+          { status: 500 }
         );
-      });
-
-      const limit = pLimit(CONCURRENCY);
-      const rows: any[] = [];
-
-      await Promise.all(
-        entries.map((entry) =>
-          limit(async () => {
-            const blob = await entry.async("nodebuffer");
-            const filename = entry.name.split("/").pop()!;
-            const storagePath = `${userId}/${datasetName}/${filename}`;
-
-            let compressed: Buffer;
-
-            try {
-              compressed = await sharp(blob)
-                .rotate()
-                .resize({ width: 2000, withoutEnlargement: true }) // better network perf
-                .webp({
-                  quality: 70,
-                  effort: 5,
-                })
-                .toBuffer();
-            } catch (err) {
-              console.error(
-                "Sharp compression failed, falling back to raw buffer:",
-                err,
-              );
-              compressed = blob;
-            }
-            const { error: uploadErr } = await supabaseServer.storage
-              .from("datasets")
-              .upload(storagePath, compressed, { upsert: true });
-
-            if (uploadErr) throw uploadErr;
-
-            rows.push({
-              dataset_id: datasetId,
-              storage_path: storagePath,
-              width: null,
-              height: null,
-            });
-          }),
-        ),
-      );
-
-      const inserted: any[] = [];
-
-      // Batch DB insert
-      for (let i = 0; i < rows.length; i += BATCH) {
-        const batch = rows.slice(i, i + BATCH);
-        const { data, error } = await supabaseServer
-          .from("images")
-          .insert(batch)
-          .select();
-
-        if (error) throw error;
-        inserted.push(...data);
       }
 
+      // frontend will call edge function with this zipPath
       return NextResponse.json({
         success: true,
-        thumbnails: inserted.map((row) => ({
-          id: row.id,
-          url: "",
-          storage_path: row.storage_path,
-        })),
-        isZip: file.name.endsWith(".zip"),
+        isZip: true,
+        zipPath: zipStoragePath,
       });
     }
 
+    // Otherwise → normal multi-file upload
     const thumbnails: any[] = [];
 
     for (const file of files) {
@@ -119,7 +59,11 @@ export async function POST(req: Request) {
         .from("datasets")
         .upload(storagePath, file, { upsert: true });
 
-      if (uploadErr) throw uploadErr;
+      if (uploadErr)
+        return NextResponse.json(
+          { success: false, error: uploadErr.message },
+          { status: 500 }
+        );
 
       const { data, error: insertErr } = await supabaseServer
         .from("images")
@@ -130,7 +74,11 @@ export async function POST(req: Request) {
         .select()
         .single();
 
-      if (insertErr) throw insertErr;
+      if (insertErr)
+        return NextResponse.json(
+          { success: false, error: insertErr.message },
+          { status: 500 }
+        );
 
       thumbnails.push({
         id: data.id,
@@ -139,12 +87,16 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({ success: true, thumbnails });
+    return NextResponse.json({
+      success: true,
+      isZip: false,
+      thumbnails,
+    });
   } catch (err: any) {
     console.error(err);
     return NextResponse.json(
       { success: false, error: err.message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
