@@ -1,12 +1,12 @@
-DataPilot — Image Annotation Platform
+# DataPilot — Image Annotation Platform
 
 DataPilot is a performance-focused image annotation tool built for medium-to-large datasets. It supports fast navigation through 10,000+ images, autosave for bounding-box annotations, dataset-level overviews, and bulk image ingestion via Supabase Edge Functions.
 
 Live demo:
 👉 https://dataset-explorer-kappa.vercel.app/
 
-🚀 Features
-🔎 Fast Dataset Browsing
+## 🚀 Features
+###🔎 Fast Dataset Browsing
 
 Scroll and paginate through 10k images smoothly
 
@@ -14,7 +14,7 @@ Client-side thumbnail caching for quick revisit
 
 Instant dataset switching via searchable dataset selector
 
-🖊️ Bounding Box Annotation
+###🖊️ Bounding Box Annotation
 
 Create, move, resize, and delete bounding boxes
 
@@ -24,7 +24,7 @@ Works even under rapid editing or tab switching
 
 Recoverable after refresh thanks to Supabase persistence
 
-📁 Bulk Dataset Uploads
+###📁 Bulk Dataset Uploads
 
 Upload a ZIP of images via a Supabase Edge Function
 
@@ -34,7 +34,7 @@ Designed for up to 10,000 images (tested)
 
 Includes filename normalization and safe handling
 
-📊 Dataset Insights
+###📊 Dataset Insights
 
 Count totals per dataset
 
@@ -42,7 +42,7 @@ Preview thumbnails
 
 Quick-jump to target images for labeling
 
-🌐 Network Awareness
+###🌐 Network Awareness
 
 Built-in network indicator
 
@@ -52,7 +52,7 @@ Auto-fades when connectivity is restored
 
 Prevents annotation loss during outages
 
-🎨 Modern UI/UX
+###🎨 Modern UI/UX
 
 Built with Next.js App Router, React, TypeScript, Tailwind, and shadcn/ui
 
@@ -60,7 +60,7 @@ Clean, workspace-style layout optimized for desktop annotation
 
 Mobile-friendly browsing (annotation disabled on mobile)
 
-🏗️ Tech Stack
+##🏗️ Tech Stack
 Frontend
 
 Next.js (App Router)
@@ -87,7 +87,7 @@ Vercel for frontend
 
 Supabase for auth, storage, and backend logic
 
-⚙️ Dataset Upload Flow
+##⚙️ Dataset Upload Flow
 
 Upload a ZIP through the UI
 
@@ -108,7 +108,7 @@ Images appear with thumbnails ready for annotation
 Max tested dataset:
 🟢 10,000 images
 
-📝 Annotation Flow
+##📝 Annotation Flow
 
 Open a dataset & navigate to an image
 
@@ -120,7 +120,7 @@ Offline changes are prevented while offline indicator is visible
 
 Refreshing the page restores annotations from Supabase
 
-🛠️ Development Notes
+##🛠️ Development Notes
 
 This project focuses on:
 
@@ -132,7 +132,7 @@ A clean annotation UX and informative visualizations for large scale datasets
 
 Clear, maintainable full-stack architecture
 
-🌟 Future Improvements
+### 🌟 Future Improvements
 
 Polygon/segmentation tools
 
