@@ -19,6 +19,7 @@ const COLORS = [
   "#06B6D4",
 ];
 
+// TODO - split into multiple components
 export function AnalyticsPanel({ analytics, loading }: AnalyticsPanelProps) {
 
   if (loading) {
@@ -66,6 +67,7 @@ export function AnalyticsPanel({ analytics, loading }: AnalyticsPanelProps) {
     }
   });
 
+  // TODO - support customizable heatmap bucket size
   const maxBucket = Math.max(
     ...(analytics.heatmap?.map((p) => p.count ?? 0) ?? [0]),
   );
