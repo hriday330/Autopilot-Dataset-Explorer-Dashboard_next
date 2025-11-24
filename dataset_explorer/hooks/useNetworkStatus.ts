@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+/** Poll gstatic url to check network status reliably */
 export function useNetworkStatus() {
   const [online, setOnline] = useState(true);
 
@@ -27,7 +28,7 @@ export function useNetworkStatus() {
     }
     check();
     timer = setInterval(check, 1500);
-    
+
     return () => clearInterval(timer);
   }, []);
 

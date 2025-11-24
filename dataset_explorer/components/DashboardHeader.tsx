@@ -28,11 +28,6 @@ export function DashboardHeader({
   currentView,
   onViewChange,
 }: DashboardHeaderProps) {
-  const currentTime = new Date().toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
   // Read auth state from context
   const { user, loading } = useUser();
 
@@ -42,7 +37,7 @@ export function DashboardHeader({
         <div className="flex items-center gap-3">
           <div className="w-1 h-8 bg-[#E82127] rounded-full"></div>
           <h1 className="text-[#E5E5E5] tracking-tight">
-            Autopilot Dataset Explorer
+            DataPilot
           </h1>
         </div>
 
