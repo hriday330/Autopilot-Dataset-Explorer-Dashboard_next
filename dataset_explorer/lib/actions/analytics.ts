@@ -5,9 +5,13 @@ export async function getDatasetAnalytics(datasetId: string | null) {
     return { data: null, error: "No dataset selected" };
   }
 
-  const { data, error } = await supabase.rpc("get_dataset_analytics", {
-    p_dataset_id: datasetId,
-  });
+  let { data, error } = await supabase
+    .rpc('dataset_analytics', {
+        datasetid: datasetId
+    })
+    if (error) console.error(error)
+    else console.log(data)
+
 
   if (error) {
     console.error("Analytics RPC error:", error);
@@ -18,41 +22,44 @@ export async function getDatasetAnalytics(datasetId: string | null) {
 }
 
 
-export interface DatasetAnalytics {
+type AnalyticsHeatmapBucket = {
+  x_bucket: number | null;
+  y_bucket: number | null;
+  count: number;
+};
+
+type BoxSizeDistributionItem = {
+  label: string;
+  avg_width: number | null;
+  avg_height: number | null;
+  min_width: number | null;
+  min_height: number | null;
+  max_width: number | null;
+  max_height: number | null;
+};
+
+type LabelsPerFrameItem = {
+  frame_id: string; // UUID as string
+  total: number;
+};
+
+type LabelFrequencyItem = {
+  label: string;
+  count: number;
+};
+
+type FrameMissingLabelItem = {
+  label: string;
+  frame_id: string; // UUID as string
+};
+
+export type DatasetAnalytics = {
   totalFrames: number;
   totalLabeledFrames: number;
   totalBoxes: number;
-
-  labelsPerFrame: {
-    frame_id: string;
-    frame_index: number;
-    total: number;
-  }[];
-
-  labelFrequency: {
-    label: string;
-    count: number;
-  }[];
-
-  framesMissingLabel: {
-    label: string;
-    frame_id: string;
-    frame_index: number;
-  }[];
-
-  boxSizeDistribution: {
-    label: string;
-    avg_width: number;
-    avg_height: number;
-    min_width: number;
-    min_height: number;
-    max_width: number;
-    max_height: number;
-  }[];
-
-  heatmap: {
-    x_bucket: number;
-    y_bucket: number;
-    count: number;
-  }[];
-}
+  labelsPerFrame: LabelsPerFrameItem[] | null;
+  labelFrequency: LabelFrequencyItem[] | null;
+  framesMissingLabel: FrameMissingLabelItem[] | null;
+  boxSizeDistribution: BoxSizeDistributionItem[] | null;
+  heatmap: AnalyticsHeatmapBucket[] | null;
+};

@@ -215,7 +215,7 @@ function DashboardContent() {
               </div>
             )
           ) : (
-            <AnalyticsPanel boxes={boxes} frames={thumbnails} />
+            <AnalyticsPanel datasetId={selectedDatasetId}/>
           )}
         </div>
       </div>
