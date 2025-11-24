@@ -18,9 +18,12 @@ import { useLabelClasses } from "@hooks/useLabelClasses";
 import { ManageLabelsModal } from "@components/ManageLabelsModal";
 import Spinner from "@components/ui/spinner";
 import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
+import { Button } from "@components/ui/button";
+import { useRouter } from "next/navigation";
 
 const PAGE_SIZE = 12;
 
+// TODO - refactor into multiple components
 function DashboardContent() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [selectedLabelId, setSelectedLabelId] = useState<string>("");
@@ -28,8 +31,7 @@ function DashboardContent() {
   const [currentView, setCurrentView] = useState<"labeling" | "analytics">(
     "labeling",
   );
-
-  
+  const router = useRouter();
   const { user } = useUser();
   const { loadDatasets, isPending: isDatasetsPending } = useDatasets();
   const {
@@ -217,8 +219,9 @@ function DashboardContent() {
                 <Spinner text="Loading your datasets" />
               </div>
             ) : (
-              <div className="text-center text-[#A3A3A3] mt-20">
-                No images in this dataset
+              <div className="text-center text-[#A3A3A3] mt-20 space-x-3">
+                <span>No images in this dataset</span>
+                <Button className="border-[#2A2A2A] bg-[#1A1A1A] text-[#D4D4D4] hover:bg-[#222]" onClick={()=> router.push("/datasets")}> Upload images </Button>
               </div>
             )
           ) : (

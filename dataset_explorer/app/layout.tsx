@@ -3,11 +3,12 @@ import "@styles/globals.css";
 import { AuthProvider } from "@components/AuthProvider";
 import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
 import { Toaster } from "sonner";
+import { NetworkIndicator } from "@components/NetworkIndicator";
 
 export const metadata: Metadata = {
-  title: "Autopilot Dataset Explorer",
+  title: "DataPilot",
   description:
-    "AI-powered dataset labeling tool with interactive bounding box annotation",
+    "All-in-one dataset labeling tool with interactive bounding box annotation",
 };
 
 export default function RootLayout({
@@ -21,7 +22,9 @@ export default function RootLayout({
         <ReactQueryProvider>
           <AuthProvider>{children}</AuthProvider>
           <Toaster position="top-right" richColors closeButton />
+          <NetworkIndicator/>
         </ReactQueryProvider>
+        
       </body>
     </html>
   );
