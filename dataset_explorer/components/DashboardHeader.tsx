@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  Bell,
-  Clock,
   User,
   Download,
   Trash2,
@@ -34,7 +32,7 @@ export function DashboardHeader({
   return (
     <header className="h-16 bg-[#121212] border-b border-[#1F1F1F] px-6 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-[220px]">
           <div className="w-1 h-8 bg-[#E82127] rounded-full"></div>
           <h1 className="text-[#E5E5E5] tracking-tight">
             DataPilot
@@ -96,11 +94,6 @@ export function DashboardHeader({
             Your Datasets
           </Button>
         </Link>
-        <button className="relative p-2 hover:bg-[#1F1F1F] rounded-lg transition-colors">
-          <Bell className="w-5 h-5 text-[#A3A3A3]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#E82127] rounded-full"></span>
-        </button>
-
         {/* Profile: show sign-in button if not signed in */}
         {loading ? (
           <div className="p-2 bg-[#1F1F1F] rounded-lg w-9 h-9" />
