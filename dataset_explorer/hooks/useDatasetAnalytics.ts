@@ -7,14 +7,17 @@ export function useDatasetAnalytics(datasetId?: string) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchAnalytics = () => {
     if (!datasetId) return;
     setLoading(true);
 
     getDatasetAnalytics(datasetId)
       .then(setData)
       .finally(() => setLoading(false));
+  }
+  useEffect(() => {
+    fetchAnalytics()
   }, [datasetId]);
 
-  return { data, loading } as { data: DatasetAnalytics, loading: boolean};
+  return { data, loading, fetchAnalytics } as { data: DatasetAnalytics, loading: boolean, fetchAnalytics: () => void;};
 }

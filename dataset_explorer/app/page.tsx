@@ -50,7 +50,7 @@ function DashboardContent() {
   const { labels, createLabel, updateLabel, reorderLabels, deleteLabel } =
     useLabelClasses(selectedDatasetId);
 
-  const { data: analytics, loading } = useDatasetAnalytics(
+  const { data: analytics, loading, fetchAnalytics } = useDatasetAnalytics(
       selectedDatasetId ?? undefined,
     );
 
@@ -94,6 +94,7 @@ function DashboardContent() {
     currentFrame,
     boxes,
     user,
+    fetchAnalytics
   );
 
   const totalFrames = imagesTotal;
@@ -221,7 +222,7 @@ function DashboardContent() {
               </div>
             )
           ) : (
-            <AnalyticsPanel analytics={analytics} />
+            <AnalyticsPanel analytics={analytics} loading={loading} />
           )}
         </div>
       </div>

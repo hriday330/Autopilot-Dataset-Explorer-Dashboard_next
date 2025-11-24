@@ -20,14 +20,15 @@ export function useAutosaveAnnotations(
   currentFrame: number,
   boxes: BoxesState,
   user: User | null,
-) {
+  onSave?: () => void
+){
   const pendingCount = useRef(0);
 
   async function waitForSave() {
     // Poll until all pending saves finish
     while (pendingCount.current > 0) {
       await new Promise((res) => setTimeout(res, 50));
-    }
+    }    
   }
 
   useEffect(() => {
@@ -48,6 +49,8 @@ export function useAutosaveAnnotations(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
+        if (onSave) onSave();
       } catch (err) {
         console.error("Autosave error:", err);
       } finally {
