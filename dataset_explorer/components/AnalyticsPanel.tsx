@@ -1,10 +1,11 @@
 "use client";
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
+import { DatasetAnalytics } from "@lib/actions/analytics";
 
 interface AnalyticsPanelProps {
-  datasetId?: string | null;
+  analytics?: DatasetAnalytics
+  loading?: boolean;
 }
 
 const COLORS = [
@@ -18,10 +19,7 @@ const COLORS = [
   "#06B6D4",
 ];
 
-export function AnalyticsPanel({ datasetId }: AnalyticsPanelProps) {
-  const { data: analytics, loading } = useDatasetAnalytics(
-    datasetId ?? undefined,
-  );
+export function AnalyticsPanel({ analytics, loading }: AnalyticsPanelProps) {
 
   if (loading) {
     return (

@@ -17,6 +17,7 @@ import { useFrameNavigation } from "@hooks/useFrameNavigation";
 import { useLabelClasses } from "@hooks/useLabelClasses";
 import { ManageLabelsModal } from "@components/ManageLabelsModal";
 import Spinner from "@components/ui/spinner";
+import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
 
 const PAGE_SIZE = 12;
 
@@ -28,6 +29,7 @@ function DashboardContent() {
     "labeling",
   );
 
+  
   const { user } = useUser();
   const { loadDatasets, isPending: isDatasetsPending } = useDatasets();
   const {
@@ -47,6 +49,10 @@ function DashboardContent() {
 
   const { labels, createLabel, updateLabel, reorderLabels, deleteLabel } =
     useLabelClasses(selectedDatasetId);
+
+  const { data: analytics, loading } = useDatasetAnalytics(
+      selectedDatasetId ?? undefined,
+    );
 
   useEffect(() => {
     if (labels.length > 0 && !selectedLabelId) {
@@ -150,9 +156,9 @@ function DashboardContent() {
     }
   };
 
-  const labeledFramesCount = Object.keys(boxes).filter(
-    (key) => boxes[key].length > 0,
-  ).length;
+  const labeledFramesCount =
+  analytics?.totalLabeledFrames ?? 0;
+
   const absoluteFrameNumber =
     (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
 
@@ -215,7 +221,7 @@ function DashboardContent() {
               </div>
             )
           ) : (
-            <AnalyticsPanel datasetId={selectedDatasetId}/>
+            <AnalyticsPanel analytics={analytics} />
           )}
         </div>
       </div>
