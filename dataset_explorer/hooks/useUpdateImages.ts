@@ -49,110 +49,93 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   };
 
   const handleUploadFiles = async (
-    files: FileList | null,
-    datasetId: string,
-    datasetName: string,
-    userId: string,
-    onOptimisticAdd: (thumbnails: ImageThumbnail[]) => void,
-  ) => {
-    if (!files || !userId || !datasetId) return;
+  files: FileList | null,
+  datasetId: string,
+  datasetName: string,
+  userId: string,
+  onOptimisticAdd: (thumbnails: ImageThumbnail[]) => void,
+) => {
+  if (!files || files.length === 0 || !userId || !datasetId) return;
 
-    setUploading(true);
-    setMessage(null);
+  setUploading(true);
+  setMessage(null);
 
-    try {
-      const fd = new FormData();
-      Array.from(files).forEach((f) => fd.append("files", f));
+  try {
+    const file = files[0]; // only one file is supported currently (either single image or zip) TODO - improve this in future to support up to 15 files upload without zip
+    setUploadProgress(0);
 
-      fd.append("datasetId", datasetId);
-      fd.append("datasetName", datasetName);
-      fd.append("userId", userId);
+    const result = await uploadWithProgress({
+      file,
+      datasetId,
+      datasetName,
+      userId,
+      onProgress: setUploadProgress,
+    });
 
-      setUploadProgress(0);
+    if (!result.success) {
+      setMessage({ message: `Upload error: ${result.error}`, type: "error" });
+      return;
+    }
+    if (result.isZip) {
+      setProcessingZip(true);
 
-      const json = await uploadWithProgress({
-        url: "/api/upload",
-        formData: fd,
-        onProgress: setUploadProgress,
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/process-zip`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          },
+          body: JSON.stringify({
+            datasetId,
+            datasetName,
+            userId,
+            zipPath: result.zipPath,
+          }),
+        },
+      );
 
-      if (!json.success) {
+      const fx = await res.json();
+      setProcessingZip(false);
+
+      if (!fx.success) {
         setMessage({
-          message: `Upload error: ${json.error}`,
+          message: "Processing error: " + fx.error,
           type: "error",
         });
         return;
       }
 
-      setMessage({
-        message: "Upload complete",
-        type: "success",
-      });
-
-      if (json.isZip) {
-        setProcessingZip(true);
-
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/process-zip`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            },
-            body: JSON.stringify({
-              datasetId,
-              datasetName,
-              userId,
-              zipPath: json.zipPath,
-            }),
-          },
-        );
-
-        const fx = await res.json();
-        setProcessingZip(false);
-
-        if (!fx.success) {
-          setMessage({
-            message: "Processing error: " + fx.error,
-            type: "error",
-          });
-          return;
-        }
-
-        handlers.onUploadComplete?.();
-        return;
-      }
-
-      if (!json.isZip) {
-        const newThumbnails = await Promise.all(
-          json.thumbnails.map(async (t) => {
-            const { data } = await supabase.storage
-              .from("datasets")
-              .createSignedUrl(t.storage_path, 3600);
-
-            return {
-              ...t,
-              url: data?.signedUrl ?? t.url ?? "",
-            };
-          }),
-        );
-
-        onOptimisticAdd(newThumbnails);
-      } else {
-        handlers.onUploadComplete?.();
-      }
-    } catch (err: any) {
-      console.error(err);
-      setMessage({
-        message: "Upload error: " + (err?.message ?? String(err)),
-        type: "error",
-      });
-    } finally {
-      setUploading(false);
+      setMessage({ message: "Upload complete", type: "success" });
+      handlers.onUploadComplete?.();
+      return;
     }
-  };
+    const thumbWithUrl = await Promise.all(
+      result.thumbnails.map(async (t: ImageThumbnail) => {
+        const { data } = await supabase.storage
+          .from("datasets")
+          .createSignedUrl(t.storage_path, 3600);
+
+        return { ...t, url: data?.signedUrl ?? "" };
+      }),
+    );
+
+    onOptimisticAdd(thumbWithUrl);
+
+    setMessage({ message: "Upload complete", type: "success" });
+    handlers.onUploadComplete?.();
+  } catch (err: any) {
+    console.error(err);
+    setMessage({
+      message: "Upload error: " + (err?.message ?? String(err)),
+      type: "error",
+    });
+  } finally {
+    setUploading(false);
+  }
+};
 
   return {
     uploading,
