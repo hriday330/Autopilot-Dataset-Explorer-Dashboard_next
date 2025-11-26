@@ -4,6 +4,7 @@ import { AuthProvider } from "@components/AuthProvider";
 import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
 import { Toaster } from "sonner";
 import { NetworkIndicator } from "@components/NetworkIndicator";
+import { DatasetProvider } from "@contexts/DatasetContext";
 
 export const metadata: Metadata = {
   title: "DataPilot",
@@ -19,12 +20,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ReactQueryProvider>
-          <AuthProvider>{children}</AuthProvider>
-          <Toaster position="top-right" richColors closeButton />
-          <NetworkIndicator/>
-        </ReactQueryProvider>
-        
+        <DatasetProvider>
+          <ReactQueryProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+            <Toaster position="top-right" richColors closeButton />
+            <NetworkIndicator/>
+          </ReactQueryProvider>
+        </DatasetProvider>
       </body>
     </html>
   );
