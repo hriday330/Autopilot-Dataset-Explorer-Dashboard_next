@@ -1,16 +1,32 @@
-export function uploadWithProgress({
-  url,
-  formData,
+export async function uploadWithProgress({
+  file,
+  datasetId,
+  datasetName,
+  userId,
   onProgress,
 }: {
-  url: string;
-  formData: FormData;
+  file: File;
+  datasetId: string;
+  datasetName: string;
+  userId: string;
   onProgress?: (percent: number) => void;
 }) {
-  return new Promise<UploadResponse>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
+  // Request signed URL 
+  const { uploadUrl, storagePath } = await fetch("/api/upload-url", {
+    method: "POST",
+    body: JSON.stringify({
+      fileName: file.name,
+      fileType: file.type,
+      userId,
+      datasetName,
+    }),
+  }).then((r) => r.json());
 
-    xhr.open("POST", url);
+  // Upload to Supabase Storage
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadUrl);
+    xhr.setRequestHeader("Content-Type", file.type);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
@@ -19,19 +35,27 @@ export function uploadWithProgress({
       }
     };
 
-    xhr.onload = () => {
-      try {
-        resolve(JSON.parse(xhr.responseText));
-      } catch (err) {
-        reject(err);
-      }
-    };
-
+    xhr.onload = () => resolve();
     xhr.onerror = reject;
 
-    xhr.send(formData);
+    xhr.send(file);
   });
+
+  const isZip = file.name.toLowerCase().endsWith(".zip");
+
+  // Finish route stores DB route (if it is a single image) or just returns storage path 
+  const result = await fetch("/api/upload-finish", {
+    method: "POST",
+    body: JSON.stringify({
+      datasetId,
+      storagePath,
+      isZip,
+    }),
+  }).then((r) => r.json());
+
+  return result as UploadResponse;
 }
+
 
 type UploadResponse = {
   success: boolean;
