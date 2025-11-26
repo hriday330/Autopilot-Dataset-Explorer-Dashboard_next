@@ -44,9 +44,8 @@ export function DatasetPicker() {
   };
 
   const handleCreateDataset = async () => {
-    if (!user) return;
-    // TODO - redirect to manage datasets with createDataset modal opened
-
+    if (!user) return; // TODO - prompt user to sign in OR redirect to login page 
+    router.push("/datasets");
   };
 
   return (
