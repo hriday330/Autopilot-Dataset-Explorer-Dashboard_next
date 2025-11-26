@@ -9,7 +9,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useDatasets } from "@hooks/useDatasets";
 import { useUser } from "@components/AuthProvider";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { BoundingBox } from "@lib/types";
 import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
 import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
@@ -18,12 +18,11 @@ import { useLabelClasses } from "@hooks/useLabelClasses";
 import { ManageLabelsModal } from "@components/ManageLabelsModal";
 import Spinner from "@components/ui/spinner";
 import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
+import { useDataset } from "@contexts/DatasetContext";
 import { Button } from "@components/ui/button";
-import { useRouter } from "next/navigation";
 
 const PAGE_SIZE = 12;
 
-// TODO - refactor into multiple components
 function DashboardContent() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [selectedLabelId, setSelectedLabelId] = useState<string>("");
@@ -32,8 +31,16 @@ function DashboardContent() {
     "labeling",
   );
   const router = useRouter();
+
   const { user } = useUser();
-  const { loadDatasets, isPending: isDatasetsPending } = useDatasets();
+
+  const {
+    selected: datasetId,
+    setSelected,
+    loadDatasets,
+    isPending: isDatasetsPending,
+  } = useDataset();
+
   const {
     thumbnails,
     imagesTotal,
@@ -43,19 +50,21 @@ function DashboardContent() {
 
   const searchParams = useSearchParams();
   const datasetFromUrl = searchParams.get("dataset");
-  const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(
-    null,
-  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const [showManageLabels, setShowManageLabels] = useState(false);
 
+  // Load labels & analytics based on global datasetId
   const { labels, createLabel, updateLabel, reorderLabels, deleteLabel } =
-    useLabelClasses(selectedDatasetId);
+    useLabelClasses(datasetId);
 
-  const { data: analytics, loading, fetchAnalytics } = useDatasetAnalytics(
-      selectedDatasetId ?? undefined,
-    );
+  const {
+    data: analytics,
+    loading,
+    fetchAnalytics,
+  } = useDatasetAnalytics(datasetId);
 
+  // ------------ Label auto-select ------------
   useEffect(() => {
     if (labels.length > 0 && !selectedLabelId) {
       setSelectedLabelId(labels[0].id);
@@ -68,35 +77,33 @@ function DashboardContent() {
     }
   }, [labels, selectedLabelId]);
 
-
+  // ------------ NEW: Load datasets globally ------------
   useEffect(() => {
     if (!user) return;
 
-    // If URL provided dataset, use it
-    if (datasetFromUrl) {
-      setSelectedDatasetId(datasetFromUrl);
-      loadDatasets(user.id); // still load all datasets
-      return;
-    }
-
-    // Else auto-select first dataset
-    loadDatasets(user.id, undefined, (firstId) => {
-      setSelectedDatasetId(firstId);
+    loadDatasets(user.id).then(() => {
+      // If URL has dataset override, apply it
+      if (datasetFromUrl) {
+        setSelected(datasetFromUrl);
+      }
     });
   }, [user]);
 
+  // ------------ Load images after dataset loads ------------
   useEffect(() => {
-    if (!selectedDatasetId) return;
-    loadImagesForDataset(selectedDatasetId, currentPage, PAGE_SIZE);
-  }, [selectedDatasetId, currentPage]);
+    if (!datasetId) return;
+    loadImagesForDataset(datasetId, currentPage, PAGE_SIZE);
+  }, [datasetId, currentPage]);
 
+  // Load annotations
   useLoadAnnotations(thumbnails, currentFrame, setBoxes);
+
   const { waitForSave } = useAutosaveAnnotations(
     thumbnails,
     currentFrame,
     boxes,
     user,
-    fetchAnalytics
+    fetchAnalytics,
   );
 
   const totalFrames = imagesTotal;
@@ -123,9 +130,7 @@ function DashboardContent() {
 
   const handleExportData = async () => {
     await waitForSave();
-    const payload = {
-      datasetId: selectedDatasetId,
-    };
+    const payload = { datasetId };
 
     const res = await fetch("/api/export", {
       method: "POST",
@@ -133,35 +138,26 @@ function DashboardContent() {
       body: JSON.stringify(payload),
     });
 
-    if (!res.ok) {
-      console.error("Export failed");
-      return;
-    }
+    if (!res.ok) return console.error("Export failed");
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `autopilot-dataset-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `datapilot-dataset-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
 
     URL.revokeObjectURL(url);
   };
 
   const handleClearData = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to clear all labels? This cannot be undone.",
-      )
-    ) {
+    if (window.confirm("Clear all labels? This cannot be undone.")) {
       setBoxes({});
     }
   };
 
-  const labeledFramesCount =
-  analytics?.totalLabeledFrames ?? 0;
-
+  const labeledFramesCount = analytics?.totalLabeledFrames ?? 0;
   const absoluteFrameNumber =
     (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
 
@@ -216,12 +212,17 @@ function DashboardContent() {
               />
             ) : isImagesPending || isDatasetsPending ? (
               <div className="text-center text-[#A3A3A3] mt-20">
-                <Spinner text="Loading your datasets" />
+                <Spinner text="Loading your dataset..." />
               </div>
             ) : (
               <div className="text-center text-[#A3A3A3] mt-20 space-x-3">
                 <span>No images in this dataset</span>
-                <Button className="border-[#2A2A2A] bg-[#1A1A1A] text-[#D4D4D4] hover:bg-[#222]" onClick={()=> router.push("/datasets")}> Upload images </Button>
+                <Button
+                  className="border-[#2A2A2A] bg-[#1A1A1A] text-[#D4D4D4] hover:bg-[#222]"
+                  onClick={() => router.push("/datasets")}
+                >
+                  Upload images
+                </Button>
               </div>
             )
           ) : (
