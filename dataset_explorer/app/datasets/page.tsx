@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@components/AuthProvider";
-import { useDatasets } from "@hooks/useDatasets";
+import { useDataset } from "@contexts/DatasetContext";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useUpdateImages } from "@hooks/useUpdateImages";
 import { toast } from "sonner";
@@ -15,10 +15,10 @@ export default function DatasetsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
 
-  const [newName, setNewName] = React.useState("");
-  const [imagesPage, setImagesPage] = React.useState(1);
-  const [imagesPerPage] = React.useState(12);
-  const [initialLoading, setInitialLoading] = React.useState(true);
+  const [newName, setNewName] = useState("");
+  const [imagesPage, setImagesPage] = useState(1);
+  const [imagesPerPage] = useState(12);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const {
     datasets,
@@ -29,7 +29,7 @@ export default function DatasetsPage() {
     createDataset,
     message: datasetMessage,
     setMessage: setDatasetMessage,
-  } = useDatasets();
+  } = useDataset();
 
   const {
     thumbnails,
@@ -54,11 +54,13 @@ export default function DatasetsPage() {
     uploadProgress,
   } = useUpdateImages({
     onDeleteComplete: () => {
-      loadDatasets(user?.id || "", selected);
+      if (!user) return;
+      loadDatasets(user.id);
     },
     onUploadComplete: () => {
+      if (!selected || !user) return;
       cache.invalidate(selected);
-      loadDatasets(user?.id || "", selected);
+      loadDatasets(user.id);
       loadImagesForDataset(selected, 1, imagesPerPage);
     },
   });
@@ -66,7 +68,6 @@ export default function DatasetsPage() {
   const message = datasetMessage || imageMessage || opMessage;
 
   let dismissMessage: (() => void) | null = null;
-
   if (datasetMessage) dismissMessage = () => setDatasetMessage(null);
   else if (imageMessage) dismissMessage = () => setLoadImagesMessage(null);
   else if (opMessage) dismissMessage = () => setUpdateImageMessage(null);
@@ -75,23 +76,19 @@ export default function DatasetsPage() {
     if (message?.type === "success") {
       toast.success(message.message);
     }
-  }, [message, toast]);
+  }, [message]);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/auth/login");
-    }
+    if (!loading && !user) router.replace("/auth/login");
   }, [user, loading, router]);
 
-  // initial load of datasets
   useEffect(() => {
     if (!user) return;
+
     if (initialLoading) {
-      loadDatasets(user.id, selected, setSelected)?.finally(() =>
-        setInitialLoading(false),
-      );
+      loadDatasets(user.id)?.finally(() => setInitialLoading(false));
     } else {
-      loadDatasets(user.id, selected, setSelected);
+      loadDatasets(user.id);
     }
   }, [user]);
 
@@ -103,6 +100,16 @@ export default function DatasetsPage() {
     }
     loadImagesForDataset(selected, imagesPage, imagesPerPage);
   }, [selected, imagesPage, imagesPerPage]);
+
+  // TODO - refactor this so this hack is not needed
+  useEffect(() => {
+    if (message?.type === "success") {
+      dismissMessage?.();
+    }
+    if (message?.type === "error") {
+      dismissMessage?.();
+    }
+  }, [message]);
 
   const handleDeleteImage = (imageId: string, storagePath: string) => {
     deleteImageHandler(imageId, storagePath, () => {
