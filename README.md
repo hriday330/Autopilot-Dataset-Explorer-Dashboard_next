@@ -40,8 +40,6 @@ DataPilot is a performance-focused image annotation tool built for medium-to-lar
 ### 🎨 **Modern UI/UX**
 - Built with **Next.js (App Router)**, **React**, **TypeScript**, **Tailwind**, and **shadcn/ui**  
 - Workspace-style layout optimized for desktop annotation  
-- Mobile-friendly browsing (**annotation disabled on mobile**)  
-
 ---
 
 ## 🏗️ **Tech Stack**
