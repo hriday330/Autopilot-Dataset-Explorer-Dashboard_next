@@ -1,12 +1,13 @@
 "use client";
 
+import type { LabelsPerFrameItem } from "@lib/actions/analytics";
 import { EmptyMsg } from "./EmptyMsg";
 import { TH, TD } from "./TablePrimitives";
 
 export function FrameSummaryTable({
   labelsPerFrame,
 }: {
-  labelsPerFrame?: { frame_id: string; total: number }[];
+  labelsPerFrame?: LabelsPerFrameItem[];
 }) {
   return (
     <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">

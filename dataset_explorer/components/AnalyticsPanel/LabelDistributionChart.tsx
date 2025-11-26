@@ -2,6 +2,7 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { EmptyMsg } from "./EmptyMsg";
+import { LabelFrequencyItem } from "@lib/actions/analytics";
 
 const COLORS = [
   "#E82127",
@@ -18,7 +19,7 @@ export function LabelDistributionChart({
   labelFrequency,
   totalBoxes,
 }: {
-  labelFrequency?: { label: string; count: number }[];
+  labelFrequency?: LabelFrequencyItem[];
   totalBoxes: number;
 }) {
   const data =

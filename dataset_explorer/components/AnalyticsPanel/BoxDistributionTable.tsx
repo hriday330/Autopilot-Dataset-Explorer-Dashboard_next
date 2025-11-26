@@ -1,20 +1,13 @@
 "use client";
 
+import { BoxSizeDistributionItem } from "@lib/actions/analytics";
 import { EmptyMsg } from "./EmptyMsg";
 import { TH, TD } from "./TablePrimitives";
 
 export function BoxSizeDistributionTable({
   boxSizeDistribution,
 }: {
-  boxSizeDistribution?: {
-    label: string;
-    avg_width: number;
-    avg_height: number;
-    min_width: number;
-    min_height: number;
-    max_width: number;
-    max_height: number;
-  }[];
+  boxSizeDistribution?: BoxSizeDistributionItem[];
 }) {
   return (
     <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">

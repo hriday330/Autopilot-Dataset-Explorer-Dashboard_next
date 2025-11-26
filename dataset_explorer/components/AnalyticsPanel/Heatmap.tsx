@@ -1,11 +1,12 @@
 "use client";
 
+import type { AnalyticsHeatmapBucket } from "@lib/actions/analytics";
 import { EmptyMsg } from "./EmptyMsg";
 
 export function Heatmap({
   heatmap,
 }: {
-  heatmap?: { x_bucket: number; y_bucket: number; count: number }[];
+  heatmap?: AnalyticsHeatmapBucket[];
 }) {
   if (!heatmap?.length) {
     return (

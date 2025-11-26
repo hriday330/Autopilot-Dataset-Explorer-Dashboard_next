@@ -1,5 +1,6 @@
 "use client";
 
+import type { FrameMissingLabelItem, LabelFrequencyItem } from "@lib/actions/analytics";
 import { EmptyMsg } from "./EmptyMsg";
 import { TH, TD } from "./TablePrimitives";
 
@@ -8,8 +9,8 @@ export function LabelCoverageTable({
   framesMissingLabel,
   totalFrames,
 }: {
-  labelFrequency?: { label: string; count: number }[];
-  framesMissingLabel?: { label: string; frame_id: string }[];
+  labelFrequency?: LabelFrequencyItem[];
+  framesMissingLabel?: FrameMissingLabelItem[];
   totalFrames: number;
 }) {
   if (!labelFrequency?.length) {
