@@ -6,12 +6,11 @@ import {
   Trash2,
   Tag,
   BarChart3,
-  FolderOpen,
 } from "lucide-react";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { useUser } from "./AuthProvider";
+import { DatasetPicker } from "./DatasetPicker";
 
 interface DashboardHeaderProps {
   onExport: () => void;
@@ -85,15 +84,7 @@ export function DashboardHeader({
         </Button>
 
         <div className="w-px h-8 bg-[#1F1F1F]"></div>
-        <Link href="/datasets">
-          <Button
-            variant="outline"
-            className="bg-transparent border-[#1F1F1F] hover:bg-[#1F1F1F] text-[#A3A3A3] hover:text-[#E5E5E5] text-sm h-9 px-3 flex items-center gap-2"
-          >
-            <FolderOpen className="w-4 h-4" />
-            Your Datasets
-          </Button>
-        </Link>
+        <DatasetPicker/>
         {/* Profile: show sign-in button if not signed in */}
         {loading ? (
           <div className="p-2 bg-[#1F1F1F] rounded-lg w-9 h-9" />
