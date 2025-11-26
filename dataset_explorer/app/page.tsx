@@ -7,7 +7,6 @@ import { AnalyticsPanel } from "@components/AnalyticsPanel";
 import { DashboardFooter } from "@components/DashboardFooter";
 import { useState, useEffect, Suspense } from "react";
 import { useLoadImages } from "@hooks/useLoadImages";
-import { useDatasets } from "@hooks/useDatasets";
 import { useUser } from "@components/AuthProvider";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { BoundingBox } from "@lib/types";
