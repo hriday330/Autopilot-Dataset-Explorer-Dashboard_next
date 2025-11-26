@@ -22,33 +22,33 @@ export async function getDatasetAnalytics(datasetId: string | null) {
 }
 
 
-type AnalyticsHeatmapBucket = {
-  x_bucket: number | null;
-  y_bucket: number | null;
+export type AnalyticsHeatmapBucket = {
+  x_bucket: number;
+  y_bucket: number;
   count: number;
 };
 
-type BoxSizeDistributionItem = {
+export type BoxSizeDistributionItem = {
   label: string;
-  avg_width: number | null;
-  avg_height: number | null;
-  min_width: number | null;
-  min_height: number | null;
-  max_width: number | null;
-  max_height: number | null;
+  avg_width: number;
+  avg_height: number;
+  min_width: number;
+  min_height: number;
+  max_width: number;
+  max_height: number;
 };
 
-type LabelsPerFrameItem = {
+export type LabelsPerFrameItem = {
   frame_id: string; // UUID as string
   total: number;
 };
 
-type LabelFrequencyItem = {
+export type LabelFrequencyItem = {
   label: string;
   count: number;
 };
 
-type FrameMissingLabelItem = {
+export type FrameMissingLabelItem = {
   label: string;
   frame_id: string; // UUID as string
 };
