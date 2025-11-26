@@ -1,5 +1,3 @@
-// app/api/upload-finish/route.ts
-
 import { supabaseServer } from "@lib/supabaseServer";
 
 export async function POST(req: Request) {
