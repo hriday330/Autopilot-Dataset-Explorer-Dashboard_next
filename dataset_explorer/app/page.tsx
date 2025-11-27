@@ -20,6 +20,7 @@ import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
 import { useDataset } from "@contexts/DatasetContext";
 import { Button } from "@components/ui/button";
 
+// TODO - make page size configurable
 const PAGE_SIZE = 12;
 
 function DashboardContent() {
@@ -156,6 +157,23 @@ function DashboardContent() {
     }
   };
 
+  const goToFrame = (targetFrame: number) => {
+    if (
+      !Number.isInteger(targetFrame) ||
+      targetFrame < 1 ||
+      targetFrame > totalFrames
+    ) {
+      return;
+    }
+    const index = targetFrame - 1;
+    const newPage = Math.floor(index / PAGE_SIZE) + 1;
+    const newLocalFrame = index % PAGE_SIZE;
+
+    setCurrentPage(newPage);
+    setCurrentFrame(newLocalFrame);
+  };
+
+
   const labeledFramesCount = analytics?.totalLabeledFrames ?? 0;
   const absoluteFrameNumber =
     (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
@@ -206,6 +224,7 @@ function DashboardContent() {
                 selectedLabel={selectedLabelId}
                 onPrevFrame={handlePrevFrame}
                 onNextFrame={handleNextFrame}
+                onGoToFrame={goToFrame}
                 boxes={boxes}
                 setBoxes={setBoxes}
               />
