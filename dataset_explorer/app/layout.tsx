@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "@styles/globals.css";
 import { AuthProvider } from "@contexts/AuthContext";
-import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
+import { ReactQueryProvider } from "@contexts/ReactQueryContext";
 import { Toaster } from "sonner";
 import { NetworkIndicator } from "@components/General/NetworkIndicator";
 import { DatasetProvider } from "@contexts/DatasetContext";
