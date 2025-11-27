@@ -4,7 +4,8 @@ import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import type { BoundingBox, Label } from "@lib/types";
-import { useBoundingBoxes } from "./hooks/useDrawing";
+import { useBoundingBoxes } from "./hooks/useBoundingBoxes";
+import { useSelectFrame } from "./hooks/useSelectFrame";
 
 interface Frame {
   id: string;
@@ -42,8 +43,6 @@ export function ImageViewer({
   const [isPlaying, setIsPlaying] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [frameInput, setFrameInput] = useState(frameNumber.toString());
-
   const {
     getBoundingBoxLabelColor,
     getBoundingBoxLabelName,
@@ -61,22 +60,22 @@ export function ImageViewer({
     labels,
     boxes,
   );
+
+  const {
+    frameInput,
+    setFrameInput,
+    handleInputChange: handleFrameInputChange,
+    handleInputKeyDown,
+    handleInputBlur,
+    isValidFrame,
+  } = useSelectFrame(frameNumber, totalFrames, onGoToFrame);
+
+
+  // TODO - work on autoplay logic 
   useEffect(() => {
     // Sync displayed number when frame changes externally
     setFrameInput(frameNumber.toString());
   }, [frameNumber]);
-
-  const isValidFrame = (value: string) => {
-    const num = Number(value);
-    return Number.isInteger(num) && num >= 1 && num <= totalFrames;
-  };
-
-  const goToFrame = () => {
-    const n = Number(frameInput);
-    if (isValidFrame(frameInput)) {
-      onGoToFrame(n);
-    }
-  };
 
   // Auto-play frames
   useEffect(() => {
@@ -130,14 +129,9 @@ export function ImageViewer({
           <input
             type="text"
             value={frameInput}
-            onChange={(e) => setFrameInput(e.target.value)}
-            onBlur={goToFrame}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                goToFrame();
-                e.currentTarget.blur();
-              }
-            }}
+            onChange={(e) => handleFrameInputChange(e.target.value)}
+            onBlur={handleInputBlur}
+            onKeyDown={handleInputKeyDown}
             className={`w-12 text-center rounded bg-transparent text-sm outline-none
               ${isValidFrame(frameInput) ? "text-[#E5E5E5]" : "text-red-400"}`}
           />
