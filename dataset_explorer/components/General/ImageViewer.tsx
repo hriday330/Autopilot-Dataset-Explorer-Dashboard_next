@@ -21,6 +21,7 @@ interface ImageViewerProps {
   labels: Label[];
   onPrevFrame: () => void;
   onNextFrame: () => void;
+  onGoToFrame: (imageNum: number) => void;
   boxes: Record<string, BoundingBox[]>;
   setBoxes: React.Dispatch<React.SetStateAction<Record<string, BoundingBox[]>>>;
 }
@@ -32,6 +33,7 @@ export function ImageViewer({
   selectedLabel,
   onPrevFrame,
   onNextFrame,
+  onGoToFrame,
   boxes,
   setBoxes,
   labels,
@@ -43,6 +45,25 @@ export function ImageViewer({
     null,
   );
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const [frameInput, setFrameInput] = useState(frameNumber.toString());
+
+  useEffect(() => {
+    // Sync displayed number when frame changes externally
+    setFrameInput(frameNumber.toString());
+  }, [frameNumber]);
+
+  const isValidFrame = (value: string) => {
+    const num = Number(value);
+    return Number.isInteger(num) && num >= 1 && num <= totalFrames;
+  };
+
+  const goToFrame = () => {
+    const n = Number(frameInput);
+    if (isValidFrame(frameInput)) {
+      onGoToFrame(n);
+    }
+  };
 
   // Auto-play frames
   useEffect(() => {
@@ -152,10 +173,23 @@ export function ImageViewer({
         </div>
 
         {/* Frame Counter */}
-        <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm border border-[#1F1F1F] rounded-lg px-3 py-1.5 pointer-events-none">
-          <span className="text-sm text-[#E5E5E5]">
-            Frame {frameNumber} / {totalFrames}
-          </span>
+        <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm border border-[#1F1F1F] rounded-lg px-3 py-1.5 pointer-events-auto">
+          <span className="text-sm text-[#A3A3A3]">Frame</span>
+          <input
+            type="text"
+            value={frameInput}
+            onChange={(e) => setFrameInput(e.target.value)}
+            onBlur={goToFrame}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                goToFrame();
+                e.currentTarget.blur();
+              }
+            }}
+            className={`w-12 text-center rounded bg-transparent text-sm outline-none
+              ${isValidFrame(frameInput) ? "text-[#E5E5E5]" : "text-red-400"}`}
+          />
+          <span className="text-sm text-[#A3A3A3]">/ {totalFrames}</span>
           {currentFrameBoxes.length > 0 && (
             <span className="ml-2 text-xs text-[#E82127]">
               ({currentFrameBoxes.length} labels)
