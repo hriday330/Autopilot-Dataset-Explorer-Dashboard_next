@@ -4,6 +4,7 @@ import { Play, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import type { BoundingBox, Label } from "@lib/types";
+import { useBoundingBoxes } from "./hooks/useDrawing";
 
 interface Frame {
   id: string;
@@ -39,15 +40,27 @@ export function ImageViewer({
   labels,
 }: ImageViewerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [currentBox, setCurrentBox] = useState<BoundingBox | null>(null);
-  const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(
-    null,
-  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [frameInput, setFrameInput] = useState(frameNumber.toString());
 
+  const {
+    getBoundingBoxLabelColor,
+    getBoundingBoxLabelName,
+    currentBox,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    deleteBox,
+    currentFrameBoxes,
+  } = useBoundingBoxes(
+    containerRef,
+    selectedLabel,
+    setBoxes,
+    frame.id,
+    labels,
+    boxes,
+  );
   useEffect(() => {
     // Sync displayed number when frame changes externally
     setFrameInput(frameNumber.toString());
@@ -74,67 +87,6 @@ export function ImageViewer({
       return () => clearInterval(interval);
     }
   }, [isPlaying, onNextFrame]);
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    setIsDrawing(true);
-    setStartPoint({ x, y });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDrawing || !startPoint || !containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    const width = x - startPoint.x;
-    const height = y - startPoint.y;
-
-    setCurrentBox({
-      id: crypto.randomUUID(),
-      x: width > 0 ? startPoint.x : x,
-      y: height > 0 ? startPoint.y : y,
-      width: Math.abs(width),
-      height: Math.abs(height),
-      label: selectedLabel,
-    });
-  };
-
-  const handleMouseUp = () => {
-    if (currentBox && currentBox.width > 1 && currentBox.height > 1) {
-      setBoxes((prev) => ({
-        ...prev,
-        [frame.id]: [...(prev[frame.id] || []), currentBox],
-      }));
-    }
-    setIsDrawing(false);
-    setCurrentBox(null);
-    setStartPoint(null);
-  };
-
-  const deleteBox = (boxId: string) => {
-    setBoxes((prev) => ({
-      ...prev,
-      [frame.id]: (prev[frame.id] || []).filter((box) => box.id !== boxId),
-    }));
-  };
-
-  const currentFrameBoxes = boxes[frame.id] || [];
-
-  // Get label color
-  const getLabelColor = (labelId: string) => {
-    return labels.find((l) => l.id === labelId)?.color || "#E82127";
-  };
-
-  const getLabelName = (labelId: string) => {
-    return labels.find((l) => l.id === labelId)?.name || "Unknown";
-  };
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
@@ -207,14 +159,14 @@ export function ImageViewer({
               top: `${box.y}%`,
               width: `${box.width}%`,
               height: `${box.height}%`,
-              borderColor: getLabelColor(box.label),
+              borderColor: getBoundingBoxLabelColor(box.label),
             }}
           >
             <div
               className="absolute -top-6 left-0 px-2 py-0.5 rounded text-xs text-white flex items-center gap-1"
-              style={{ backgroundColor: getLabelColor(box.label) }}
+              style={{ backgroundColor: getBoundingBoxLabelColor(box.label) }}
             >
-              {getLabelName(box.label)}
+              {getBoundingBoxLabelName(box.label)}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -237,14 +189,16 @@ export function ImageViewer({
               top: `${currentBox.y}%`,
               width: `${currentBox.width}%`,
               height: `${currentBox.height}%`,
-              borderColor: getLabelColor(selectedLabel),
+              borderColor: getBoundingBoxLabelColor(selectedLabel),
             }}
           >
             <div
               className="absolute -top-6 left-0 px-2 py-0.5 rounded text-xs text-white"
-              style={{ backgroundColor: getLabelColor(selectedLabel) }}
+              style={{
+                backgroundColor: getBoundingBoxLabelColor(selectedLabel),
+              }}
             >
-              {getLabelName(selectedLabel)}
+              {getBoundingBoxLabelName(selectedLabel)}
             </div>
           </div>
         )}
@@ -254,7 +208,9 @@ export function ImageViewer({
       <div className="text-center">
         <p className="text-xs text-[#A3A3A3]">
           Click and drag to draw bounding boxes • Selected:{" "}
-          <span className="text-[#E82127]">{getLabelName(selectedLabel)}</span>
+          <span className="text-[#E82127]">
+            {getBoundingBoxLabelName(selectedLabel)}
+          </span>
         </p>
       </div>
 
