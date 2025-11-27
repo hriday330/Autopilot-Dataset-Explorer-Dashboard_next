@@ -5,13 +5,9 @@ export async function getDatasetAnalytics(datasetId: string | null) {
     return { data: null, error: "No dataset selected" };
   }
 
-  let { data, error } = await supabase
-    .rpc('dataset_analytics', {
-        datasetid: datasetId
-    })
-    if (error) console.error(error)
-    else console.log(data)
-
+  let { data, error } = await supabase.rpc("dataset_analytics", {
+    datasetid: datasetId,
+  });
 
   if (error) {
     console.error("Analytics RPC error:", error);
@@ -20,7 +16,6 @@ export async function getDatasetAnalytics(datasetId: string | null) {
 
   return data as DatasetAnalytics;
 }
-
 
 export type AnalyticsHeatmapBucket = {
   x_bucket: number;
