@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@components/AuthProvider";
+import { useUser } from "@contexts/AuthContext";
 import { useDataset } from "@contexts/DatasetContext";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useUpdateImages } from "@hooks/useUpdateImages";

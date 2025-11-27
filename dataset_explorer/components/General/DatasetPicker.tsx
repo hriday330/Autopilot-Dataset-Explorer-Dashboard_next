@@ -5,9 +5,8 @@ import { Check, ChevronDown, FolderOpen, Plus } from "lucide-react";
 
 import { cn } from "@components/ui/utils";
 import { useDataset } from "@contexts/DatasetContext";
-import { useUser } from "@components/AuthProvider";
+import { useUser } from "@contexts/AuthContext";
 
-import { Button } from "@components/ui/button";
 import {
   Popover,
   PopoverTrigger,

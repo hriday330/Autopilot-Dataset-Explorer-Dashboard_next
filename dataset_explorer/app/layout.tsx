@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "@styles/globals.css";
-import { AuthProvider } from "@components/AuthProvider";
+import { AuthProvider } from "@contexts/AuthContext";
 import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
 import { Toaster } from "sonner";
 import { NetworkIndicator } from "@components/General/NetworkIndicator";
