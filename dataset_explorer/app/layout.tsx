@@ -3,7 +3,7 @@ import "@styles/globals.css";
 import { AuthProvider } from "@components/AuthProvider";
 import { ReactQueryProvider } from "@lib/tanstackQueryProvider";
 import { Toaster } from "sonner";
-import { NetworkIndicator } from "@components/NetworkIndicator";
+import { NetworkIndicator } from "@components/General/NetworkIndicator";
 import { DatasetProvider } from "@contexts/DatasetContext";
 
 export const metadata: Metadata = {

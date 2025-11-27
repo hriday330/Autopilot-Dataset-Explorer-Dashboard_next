@@ -7,9 +7,9 @@ import {
   Tag,
   BarChart3,
 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import Link from "next/link";
-import { useUser } from "./AuthProvider";
+import { useUser } from "../AuthProvider";
 import { DatasetPicker } from "./DatasetPicker";
 
 interface DashboardHeaderProps {

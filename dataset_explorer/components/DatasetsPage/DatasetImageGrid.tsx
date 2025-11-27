@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Button } from "./ui/button";
-import DeleteConfirmDialog from "./ui/delete-confirm-dialog";
+import { Button } from "@components/ui/button";
+import DeleteConfirmDialog from "@components/ui/delete-confirm-dialog";
 
 export type ImageThumbnail = {
   id: string;

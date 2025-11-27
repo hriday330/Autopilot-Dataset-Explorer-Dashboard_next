@@ -1,10 +1,10 @@
 "use client";
 
-import { DashboardHeader } from "@components/DashboardHeader";
-import { Sidebar } from "@components/Sidebar";
-import { ImageViewer } from "@components/ImageViewer";
+import { DashboardHeader } from "@components/General/DashboardHeader";
+import { Sidebar } from "@components/General/Sidebar";
+import { ImageViewer } from "@components/General/ImageViewer";
 import { AnalyticsPanel } from "@components/AnalyticsPanel";
-import { DashboardFooter } from "@components/DashboardFooter";
+import { DashboardFooter } from "@components/General/DashboardFooter";
 import { useState, useEffect, Suspense } from "react";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useUser } from "@components/AuthProvider";
@@ -14,7 +14,7 @@ import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
 import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 import { useFrameNavigation } from "@hooks/useFrameNavigation";
 import { useLabelClasses } from "@hooks/useLabelClasses";
-import { ManageLabelsModal } from "@components/ManageLabelsModal";
+import { ManageLabelsModal } from "@components/General/ManageLabelsModal";
 import Spinner from "@components/ui/spinner";
 import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
 import { useDataset } from "@contexts/DatasetContext";

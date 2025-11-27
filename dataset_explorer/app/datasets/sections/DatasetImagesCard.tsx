@@ -1,7 +1,7 @@
 "use client";
 
 import Spinner from "@components/ui/spinner";
-import DatasetImageGrid from "@components/DatasetImageGrid";
+import DatasetImageGrid from "@components/DatasetsPage/DatasetImageGrid";
 
 export function DatasetImagesCard({
   thumbnails,

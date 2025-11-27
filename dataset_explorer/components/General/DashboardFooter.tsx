@@ -1,7 +1,7 @@
 "use client";
 
-import { Progress } from "./ui/progress";
-import { Badge } from "./ui/badge";
+import { Progress } from "../ui/progress";
+import { Badge } from "../ui/badge";
 
 interface DashboardFooterProps {
   labeledCount: number;
