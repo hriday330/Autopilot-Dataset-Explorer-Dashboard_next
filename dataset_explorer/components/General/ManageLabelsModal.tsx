@@ -23,7 +23,7 @@ import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Label } from "@lib/types";
 import { GripVertical, Trash2, Plus } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
 import { HexColorPicker } from "react-colorful";
 
 interface ManageLabelsModalProps {

@@ -1,8 +1,8 @@
 "use client";
 
 import { Alert, AlertDescription } from "@components/ui/alert";
-import DatasetSelector from "@components/DatasetSelector";
-import DatasetCreation from "@components/DatasetCreation";
+import DatasetSelector from "@components/DatasetsPage/DatasetSelector";
+import DatasetCreation from "@components/DatasetsPage/DatasetCreation";
 import FileUploader from "@components/ui/file-uploader";
 import Spinner from "@components/ui/spinner";
 import { Progress } from "@components/ui/progress";

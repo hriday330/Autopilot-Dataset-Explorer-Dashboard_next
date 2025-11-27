@@ -1,8 +1,8 @@
 "use client";
 
 import { Box, Tag, Layers, ListChecks } from "lucide-react";
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
+import { Button } from "@components/ui/button";
+import { Checkbox } from "@components/ui/checkbox";
 import { useState } from "react";
 import { Label } from "@lib/types";
 

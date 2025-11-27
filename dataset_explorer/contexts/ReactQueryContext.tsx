@@ -8,7 +8,6 @@ export function ReactQueryProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // Important: QueryClient must be created in state to avoid re-instantiation
   const [queryClient] = useState(
     () =>
       new QueryClient({
