@@ -22,17 +22,16 @@ import { Button } from "@components/ui/button";
 import type { User } from "@supabase/supabase-js";
 import type { Dataset, Label, BoundingBox, ImageThumbnail } from "@lib/types";
 
-
 // TODO - make page size configurable
 const PAGE_SIZE = 12;
 
 export function DashboardContent({
-    initialUser,
-    initialDatasets,
-    initialDatasetId,
-    initialThumbnails,
-    initialTotal,
-    initialLabels,
+  initialUser,
+  initialDatasets,
+  initialDatasetId,
+  initialThumbnails,
+  initialTotal,
+  initialLabels,
 }: DashboardContentProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [selectedLabelId, setSelectedLabelId] = useState<string>("");
@@ -47,13 +46,16 @@ export function DashboardContent({
   const {
     selected: datasetId,
     setSelected,
+    setDatasets,
     loadDatasets,
     isPending: isDatasetsPending,
   } = useDataset();
 
   const {
     thumbnails,
+    setThumbnails,
     imagesTotal,
+    setImagesTotal,
     loadImagesForDataset,
     isPending: isImagesPending,
   } = useLoadImages();
@@ -73,6 +75,28 @@ export function DashboardContent({
     loading,
     fetchAnalytics,
   } = useDatasetAnalytics(datasetId);
+  useEffect(() => {
+    // 1) hydrate dataset selection
+    if (initialDatasetId) {
+      setSelected(initialDatasetId);
+    }
+
+    if (initialDatasets) {
+        setDatasets(initialDatasets)
+    }
+
+    // 2) hydrate thumbnails + total
+    if (initialThumbnails?.length) {
+      setThumbnails(initialThumbnails);
+      setImagesTotal(initialTotal);
+    }
+
+    // 3) hydrate labels (mutate hook state in-place to avoid modifying hook)
+    if (initialLabels?.length && labels.length === 0) {
+      labels.splice(0, labels.length, ...initialLabels);
+    }
+  }, []);
+  // -----------------
 
   // ------------ Label auto-select ------------
   useEffect(() => {
@@ -182,7 +206,6 @@ export function DashboardContent({
     setCurrentPage(newPage);
     setCurrentFrame(newLocalFrame);
   };
-
 
   const labeledFramesCount = analytics?.totalLabeledFrames ?? 0;
   const absoluteFrameNumber =

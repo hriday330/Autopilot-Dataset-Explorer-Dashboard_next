@@ -21,7 +21,7 @@ export async function getLabels(
 
   const supabaseServer = await createSupabaseServerClient();
   const { data, error } = await supabaseServer
-    .from("labels")
+    .from("label_classes")
     .select("*")
     .eq("dataset_id", datasetId);
 

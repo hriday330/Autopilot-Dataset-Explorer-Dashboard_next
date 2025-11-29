@@ -25,7 +25,7 @@ export async function getThumbnails(
 
   const { data, count, error } = await supabaseServer
     .from("images")
-    .select("id, url, width, height, storage_path", { count: "exact" })
+    .select("id, width, height, storage_path", { count: "exact" })
     .eq("dataset_id", datasetId)
     .range(from, to);
 
