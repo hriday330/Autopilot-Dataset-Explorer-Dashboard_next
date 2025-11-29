@@ -8,10 +8,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import {
-  fetchDatasetsAction,
-  createDatasetAction,
-} from "@lib/actions/dataset";
+import { fetchDatasetsAction, createDatasetAction } from "@lib/actions/dataset";
 
 import type { Dataset, OperationMessage } from "@lib/types";
 
@@ -25,7 +22,7 @@ export type DatasetContextValue = {
   loadDatasets: (userId: string) => Promise<void>;
   setDatasets: (datasets: Dataset[]) => void;
   createDataset: (name: string, userId: string) => Promise<void>;
-  setCounts: (counts: Record<string,number>) => void;
+  setCounts: (counts: Record<string, number>) => void;
   isPending: boolean;
 };
 
@@ -66,10 +63,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createDataset = async (
-    name: string,
-    userId: string,
-  ): Promise<void> => {
+  const createDataset = async (name: string, userId: string): Promise<void> => {
     if (!name || !userId) return;
 
     const result = await createDatasetAction(name, userId);
@@ -93,7 +87,6 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
     }`;
   }, [selected]);
 
-
   const value: DatasetContextValue = useMemo(
     () => ({
       datasets,
@@ -112,9 +105,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <DatasetContext.Provider value={value}>
-      {children}
-    </DatasetContext.Provider>
+    <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>
   );
 }
 

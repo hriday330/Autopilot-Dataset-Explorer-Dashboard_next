@@ -24,10 +24,12 @@ export function NetworkIndicator() {
         "px-4 py-1.5 rounded-full text-sm font-medium select-none",
         "backdrop-blur-md shadow-lg border transition-all duration-300",
         "transform-gpu",
-        visible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+        visible
+          ? "opacity-100 scale-100"
+          : "opacity-0 scale-95 pointer-events-none",
         online
           ? "bg-neutral-800/60 border-neutral-700 text-neutral-200"
-          : "bg-red-600/80 border-red-700 text-white shadow-red-500/40"
+          : "bg-red-600/80 border-red-700 text-white shadow-red-500/40",
       )}
     >
       {online ? "Connected" : "Offline"}

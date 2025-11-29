@@ -22,11 +22,9 @@ export default function RootLayout({
       <body>
         <DatasetProvider>
           <ReactQueryProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
             <Toaster position="top-right" richColors closeButton />
-            <NetworkIndicator/>
+            <NetworkIndicator />
           </ReactQueryProvider>
         </DatasetProvider>
       </body>

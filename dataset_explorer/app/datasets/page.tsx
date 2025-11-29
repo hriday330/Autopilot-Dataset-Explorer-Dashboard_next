@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@lib/server/supabaseClient";
 import { getDatasetsForUser } from "@lib/server/db/getDatasetsForUser";
 import { getThumbnails } from "@lib/server/db/getThumbnails";
 
-import { DatasetsContent } from "./DatasetsContent"; 
+import { DatasetsContent } from "./DatasetsContent";
 
 export default async function Page() {
   const cookieStore = cookies();
@@ -17,7 +17,7 @@ export default async function Page() {
   if (!user) redirect("/auth/login");
 
   const { data: datasets, error: datasetsError } = await getDatasetsForUser(
-    user.id
+    user.id,
   );
 
   if (!datasets || datasetsError) {
@@ -42,17 +42,17 @@ export default async function Page() {
 
   const counts: Record<string, number> = {};
   for (const d of datasets) {
-    counts[d.id] = d.image_count ?? 0; 
+    counts[d.id] = d.image_count ?? 0;
   }
 
-  const { data: thumbs, count } =  await getThumbnails(datasetId, 1, 12)
+  const { data: thumbs, count } = await getThumbnails(datasetId, 1, 12);
 
   return (
     <DatasetsContent
       initialUser={user}
       initialDatasets={datasets}
       initialCounts={counts}
-      initialSelectedDatasetId={datasetId?? null}
+      initialSelectedDatasetId={datasetId ?? null}
       initialThumbnails={thumbs}
       initialTotal={count}
     />

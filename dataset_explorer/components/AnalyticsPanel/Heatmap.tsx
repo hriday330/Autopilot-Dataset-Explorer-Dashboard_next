@@ -3,11 +3,7 @@
 import type { AnalyticsHeatmapBucket } from "@lib/actions/analytics";
 import { EmptyMsg } from "./EmptyMsg";
 
-export function Heatmap({
-  heatmap,
-}: {
-  heatmap?: AnalyticsHeatmapBucket[];
-}) {
+export function Heatmap({ heatmap }: { heatmap?: AnalyticsHeatmapBucket[] }) {
   if (!heatmap?.length) {
     return (
       <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">

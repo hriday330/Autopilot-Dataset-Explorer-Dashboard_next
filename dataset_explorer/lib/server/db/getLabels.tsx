@@ -11,9 +11,8 @@ interface LabelsResult {
  * @param datasetId - The dataset ID
  */
 
-
 export async function getLabels(
-  datasetId: string | undefined
+  datasetId: string | undefined,
 ): Promise<LabelsResult> {
   if (!datasetId) {
     return { data: [] };

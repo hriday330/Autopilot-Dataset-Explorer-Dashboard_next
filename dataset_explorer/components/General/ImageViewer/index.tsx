@@ -70,8 +70,7 @@ export function ImageViewer({
     isValidFrame,
   } = useSelectFrame(frameNumber, totalFrames, onGoToFrame);
 
-
-  // TODO - work on autoplay logic 
+  // TODO - work on autoplay logic
   useEffect(() => {
     // Sync displayed number when frame changes externally
     setFrameInput(frameNumber.toString());

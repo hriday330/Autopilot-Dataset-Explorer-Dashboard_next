@@ -23,7 +23,11 @@ import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Label } from "@lib/types";
 import { GripVertical, Trash2, Plus } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@components/ui/popover";
 import { HexColorPicker } from "react-colorful";
 
 interface ManageLabelsModalProps {
@@ -62,7 +66,11 @@ function SortableLabelRow({
       style={style}
       className="flex items-center gap-3 px-3 py-2 rounded-md bg-[#141414] border border-[#262626]"
     >
-      <button {...attributes} {...listeners} className="cursor-grab text-[#555]">
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab text-[#555]"
+      >
         <GripVertical className="w-4 h-4" />
       </button>
 
@@ -97,7 +105,6 @@ function SortableLabelRow({
     </div>
   );
 }
-
 
 export function ManageLabelsModal({
   open,
