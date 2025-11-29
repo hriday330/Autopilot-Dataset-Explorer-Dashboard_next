@@ -1,167 +1,60 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@lib/server/supabaseClient";
+import { getDatasetsForUser } from "@lib/server/db/getDatasetsForUser";
+import { getThumbnails } from "@lib/server/db/getThumbnails";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useUser } from "@contexts/AuthContext";
-import { useDataset } from "@contexts/DatasetContext";
-import { useLoadImages } from "@hooks/useLoadImages";
-import { useUpdateImages } from "@hooks/useUpdateImages";
-import { toast } from "sonner";
-import { DatasetControlsCard } from "./sections/DatasetControlsCard";
-import { DatasetImagesCard } from "./sections/DatasetImagesCard";
-import { DatasetActionsCard } from "./sections/DatasetActionsCard";
+import { DatasetsContent } from "./DatasetsContent"; 
 
-export default function DatasetsPage() {
-  const router = useRouter();
-  const { user, loading } = useUser();
-
-  const [newName, setNewName] = useState("");
-  const [imagesPage, setImagesPage] = useState(1);
-  const [imagesPerPage] = useState(12);
-  const [initialLoading, setInitialLoading] = useState(true);
+export default async function Page() {
+  const cookieStore = cookies();
+  const supabase = await createSupabaseServerClient();
 
   const {
-    datasets,
-    counts,
-    selected,
-    setSelected,
-    loadDatasets,
-    createDataset,
-    message: datasetMessage,
-    setMessage: setDatasetMessage,
-  } = useDataset();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const {
-    thumbnails,
-    setThumbnails,
-    imagesTotal,
-    setImagesTotal,
-    loadImagesForDataset,
-    setMessage: setLoadImagesMessage,
-    message: imageMessage,
-    isPending: imagesLoading,
-    cache,
-  } = useLoadImages();
+  if (!user) redirect("/auth/login");
 
-  const {
-    uploading,
-    deletingIds,
-    handleDeleteImage: deleteImageHandler,
-    processingZip,
-    handleUploadFiles,
-    message: opMessage,
-    setMessage: setUpdateImageMessage,
-    uploadProgress,
-  } = useUpdateImages({
-    onDeleteComplete: () => {
-      if (!user) return;
-      loadDatasets(user.id);
-    },
-    onUploadComplete: () => {
-      if (!selected || !user) return;
-      cache.invalidate(selected);
-      loadDatasets(user.id);
-      loadImagesForDataset(selected, 1, imagesPerPage);
-    },
-  });
+  const { data: datasets, error: datasetsError } = await getDatasetsForUser(
+    user.id
+  );
 
-  const message = datasetMessage || imageMessage || opMessage;
+  if (!datasets || datasetsError) {
+    return (
+      <DatasetsContent
+        initialUser={user}
+        initialDatasets={[]}
+        initialCounts={{}}
+        initialSelectedDatasetId={null}
+        initialThumbnails={[]}
+        initialTotal={0}
+      />
+    );
+  }
 
-  let dismissMessage: (() => void) | null = null;
-  if (datasetMessage) dismissMessage = () => setDatasetMessage(null);
-  else if (imageMessage) dismissMessage = () => setLoadImagesMessage(null);
-  else if (opMessage) dismissMessage = () => setUpdateImageMessage(null);
+  const cookieSelected = cookieStore.get("selectedDatasetId")?.value;
 
-  useEffect(() => {
-    if (message?.type === "success") {
-      toast.success(message.message);
-    }
-  }, [message]);
+  let datasetId = cookieSelected;
+  if (!datasetId || !datasets.some((d) => d.id === datasetId)) {
+    datasetId = datasets[0]?.id ?? null;
+  }
 
-  useEffect(() => {
-    if (!loading && !user) router.replace("/auth/login");
-  }, [user, loading, router]);
+  const counts: Record<string, number> = {};
+  for (const d of datasets) {
+    counts[d.id] = d.image_count ?? 0; 
+  }
 
-  useEffect(() => {
-    if (!user) return;
-
-    if (initialLoading) {
-      loadDatasets(user.id)?.finally(() => setInitialLoading(false));
-    } else {
-      loadDatasets(user.id);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!selected) {
-      setThumbnails([]);
-      setImagesTotal(0);
-      return;
-    }
-    loadImagesForDataset(selected, imagesPage, imagesPerPage);
-  }, [selected, imagesPage, imagesPerPage]);
-
-  // TODO - refactor this so this hack is not needed
-  useEffect(() => {
-    if (message?.type === "success") {
-      dismissMessage?.();
-    }
-    if (message?.type === "error") {
-      dismissMessage?.();
-    }
-  }, [message]);
-
-  const handleDeleteImage = (imageId: string, storagePath: string) => {
-    deleteImageHandler(imageId, storagePath, () => {
-      setThumbnails((prev) => prev.filter((t) => t.id !== imageId));
-      setImagesTotal((prev) => Math.max(0, prev - 1));
-      cache.invalidate(selected);
-    });
-  };
-
-  const handleCreateDataset = () => {
-    if (!newName || !user) return;
-    createDataset(newName, user.id);
-    setNewName("");
-  };
+  const { data: thumbs, count } =  await getThumbnails(datasetId, 1, 12)
 
   return (
-    <div className="min-h-screen p-8 bg-[#0E0E0E]">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <DatasetControlsCard
-          datasets={datasets}
-          counts={counts}
-          selected={selected}
-          setSelected={setSelected}
-          newName={newName}
-          setNewName={setNewName}
-          handleCreateDataset={handleCreateDataset}
-          handleUploadFiles={handleUploadFiles}
-          uploading={uploading}
-          uploadProgress={uploadProgress}
-          processingZip={processingZip}
-          user={user}
-          message={message}
-          dismissMessage={dismissMessage}
-          setThumbnails={setThumbnails}
-          setImagesTotal={setImagesTotal}
-          cache={cache}
-        />
-
-        <DatasetImagesCard
-          thumbnails={thumbnails}
-          deletingIds={deletingIds}
-          imagesPage={imagesPage}
-          setImagesPage={setImagesPage}
-          imagesTotal={imagesTotal}
-          imagesPerPage={imagesPerPage}
-          selected={selected}
-          imagesLoading={imagesLoading}
-          handleDeleteImage={handleDeleteImage}
-        />
-
-        <DatasetActionsCard selected={selected} router={router} />
-      </div>
-    </div>
+    <DatasetsContent
+      initialUser={user}
+      initialDatasets={datasets}
+      initialCounts={counts}
+      initialSelectedDatasetId={datasetId?? null}
+      initialThumbnails={thumbs}
+      initialTotal={count}
+    />
   );
 }

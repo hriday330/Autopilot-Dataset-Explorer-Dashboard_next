@@ -66,7 +66,6 @@ export function DashboardContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [showManageLabels, setShowManageLabels] = useState(false);
 
-  // Load labels & analytics based on global datasetId
   const { labels, createLabel, updateLabel, reorderLabels, deleteLabel } =
     useLabelClasses(datasetId);
 
@@ -76,7 +75,7 @@ export function DashboardContent({
     fetchAnalytics,
   } = useDatasetAnalytics(datasetId);
   useEffect(() => {
-    // 1) hydrate dataset selection
+
     if (initialDatasetId) {
       setSelected(initialDatasetId);
     }
@@ -84,21 +83,17 @@ export function DashboardContent({
     if (initialDatasets) {
         setDatasets(initialDatasets)
     }
-
-    // 2) hydrate thumbnails + total
     if (initialThumbnails?.length) {
       setThumbnails(initialThumbnails);
       setImagesTotal(initialTotal);
     }
 
-    // 3) hydrate labels (mutate hook state in-place to avoid modifying hook)
     if (initialLabels?.length && labels.length === 0) {
       labels.splice(0, labels.length, ...initialLabels);
     }
   }, []);
-  // -----------------
 
-  // ------------ Label auto-select ------------
+
   useEffect(() => {
     if (labels.length > 0 && !selectedLabelId) {
       setSelectedLabelId(labels[0].id);
@@ -111,25 +106,22 @@ export function DashboardContent({
     }
   }, [labels, selectedLabelId]);
 
-  // ------------ NEW: Load datasets globally ------------
   useEffect(() => {
     if (!user) return;
 
     loadDatasets(user.id).then(() => {
-      // If URL has dataset override, apply it
       if (datasetFromUrl) {
         setSelected(datasetFromUrl);
       }
     });
   }, [user]);
 
-  // ------------ Load images after dataset loads ------------
+
   useEffect(() => {
     if (!datasetId) return;
     loadImagesForDataset(datasetId, currentPage, PAGE_SIZE);
   }, [datasetId, currentPage]);
 
-  // Load annotations
   useLoadAnnotations(thumbnails, currentFrame, setBoxes);
 
   const { waitForSave } = useAutosaveAnnotations(

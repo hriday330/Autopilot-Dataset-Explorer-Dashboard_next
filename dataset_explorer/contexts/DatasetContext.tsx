@@ -25,6 +25,7 @@ export type DatasetContextValue = {
   loadDatasets: (userId: string) => Promise<void>;
   setDatasets: (datasets: Dataset[]) => void;
   createDataset: (name: string, userId: string) => Promise<void>;
+  setCounts: (counts: Record<string,number>) => void;
   isPending: boolean;
 };
 
@@ -104,6 +105,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       setMessage,
       loadDatasets,
       createDataset,
+      setCounts,
       isPending,
     }),
     [datasets, counts, selected, message, isPending],
