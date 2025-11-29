@@ -27,12 +27,7 @@ export function DatasetPicker() {
   const [open, setOpen] = useState(false);
 
   const { user } = useUser();
-  const {
-    datasets,
-    counts,
-    selected,
-    setSelected,
-  } = useDataset();
+  const { datasets, counts, selected, setSelected } = useDataset();
 
   const router = useRouter();
   const selectedDataset = datasets.find((d) => d.id === selected);
@@ -43,25 +38,24 @@ export function DatasetPicker() {
   };
 
   const handleCreateDataset = async () => {
-    if (!user) return; // TODO - prompt user to sign in OR redirect to login page 
+    if (!user) return; // TODO - prompt user to sign in OR redirect to login page
     router.push("/datasets");
   };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger 
+      <PopoverTrigger
         className={cn(
-            "h-9 px-3 py-2 text-sm flex items-center gap-2",
-            "bg-[#1A1A1A] border-[#2A2A2A] text-[#D4D4D4]",
-            "hover:bg-[#222]"
-          )}>
-        
-          <FolderOpen className="w-4 h-4 text-[#D4D4D4]" />
-          <span className="max-w-[140px] truncate">
-            {selectedDataset ? selectedDataset.name : "Select dataset"}
-          </span>
-          <ChevronDown className="w-4 h-4 opacity-70" />
-        
+          "h-9 px-3 py-2 text-sm flex items-center gap-2",
+          "bg-[#1A1A1A] border-[#2A2A2A] text-[#D4D4D4]",
+          "hover:bg-[#222]",
+        )}
+      >
+        <FolderOpen className="w-4 h-4 text-[#D4D4D4]" />
+        <span className="max-w-[140px] truncate">
+          {selectedDataset ? selectedDataset.name : "Select dataset"}
+        </span>
+        <ChevronDown className="w-4 h-4 opacity-70" />
       </PopoverTrigger>
 
       <PopoverContent

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  User,
-  Download,
-  Trash2,
-  Tag,
-  BarChart3,
-} from "lucide-react";
+import { User, Download, Trash2, Tag, BarChart3 } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { useUser } from "@contexts/AuthContext";
@@ -33,9 +27,7 @@ export function DashboardHeader({
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3 min-w-[220px]">
           <div className="w-1 h-8 bg-[#E82127] rounded-full"></div>
-          <h1 className="text-[#E5E5E5] tracking-tight">
-            DataPilot
-          </h1>
+          <h1 className="text-[#E5E5E5] tracking-tight">DataPilot</h1>
         </div>
 
         {/* View Tabs */}
@@ -84,7 +76,7 @@ export function DashboardHeader({
         </Button>
 
         <div className="w-px h-8 bg-[#1F1F1F]"></div>
-        <DatasetPicker/>
+        <DatasetPicker />
         {/* Profile: show sign-in button if not signed in */}
         {loading ? (
           <div className="p-2 bg-[#1F1F1F] rounded-lg w-9 h-9" />

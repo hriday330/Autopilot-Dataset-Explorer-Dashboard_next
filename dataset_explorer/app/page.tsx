@@ -12,15 +12,15 @@ export default async function Page() {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
-    } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth/login')
+    redirect("/auth/login");
   }
 
   const selectedFromCookie = cookieStore.get("selectedDatasetId")?.value;
 
-  const { data: datasets } = await getDatasetsForUser(user.id)
+  const { data: datasets } = await getDatasetsForUser(user.id);
 
   let datasetId = selectedFromCookie;
   if (!datasetId || !datasets?.some((d) => d.id === datasetId)) {

@@ -103,7 +103,6 @@ export function DatasetsContent({
     if (!loading && !user) router.replace("/auth/login");
   }, [user, loading, router]);
 
-
   useEffect(() => {
     setDatasets(initialDatasets);
     setCounts(initialCounts);
@@ -194,4 +193,3 @@ export function DatasetsContent({
     </div>
   );
 }
-

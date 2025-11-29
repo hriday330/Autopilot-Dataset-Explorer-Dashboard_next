@@ -82,6 +82,6 @@ export function useBoundingBoxes(
     handleMouseUp,
     getBoundingBoxLabelColor,
     getBoundingBoxLabelName,
-    deleteBox
+    deleteBox,
   };
 }

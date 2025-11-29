@@ -67,12 +67,10 @@ export default function DatasetSelector({
           </DialogHeader>
 
           <Command className="bg-[#111] text-[#E5E5E5] mt-4">
-            <CommandInput
-              placeholder="Search datasets..."
-            />
+            <CommandInput placeholder="Search datasets..." />
 
-           <CommandList
-            className="
+            <CommandList
+              className="
               max-h-80 overflow-y-auto bg-[#111]
               dark-scrollbar
             "

@@ -12,7 +12,7 @@ interface ThumbnailsResult {
 export async function getThumbnails(
   datasetId: string | undefined,
   page: number,
-  pageSize: number
+  pageSize: number,
 ): Promise<ThumbnailsResult> {
   if (!datasetId) {
     return { data: [], count: 0 };

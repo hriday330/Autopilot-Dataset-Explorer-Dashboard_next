@@ -17,7 +17,7 @@ export function useNetworkStatus() {
           method: "GET",
           signal: controller.signal,
           cache: "no-store",
-          mode: "no-cors",              
+          mode: "no-cors",
         });
 
         clearTimeout(t);

@@ -21,7 +21,10 @@ export async function POST(req: Request) {
     .single();
 
   if (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    return Response.json(
+      { success: false, error: error.message },
+      { status: 500 },
+    );
   }
 
   return Response.json({

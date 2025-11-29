@@ -23,6 +23,6 @@ export async function createSupabaseServerClient() {
           }
         },
       },
-    }
+    },
   );
 }

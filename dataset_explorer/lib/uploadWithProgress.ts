@@ -11,7 +11,7 @@ export async function uploadWithProgress({
   userId: string;
   onProgress?: (percent: number) => void;
 }) {
-  // Request signed URL 
+  // Request signed URL
   const { uploadUrl, storagePath } = await fetch("/api/upload-url", {
     method: "POST",
     body: JSON.stringify({
@@ -43,7 +43,7 @@ export async function uploadWithProgress({
 
   const isZip = file.name.toLowerCase().endsWith(".zip");
 
-  // Finish route stores DB route (if it is a single image) or just returns storage path 
+  // Finish route stores DB route (if it is a single image) or just returns storage path
   const result = await fetch("/api/upload-finish", {
     method: "POST",
     body: JSON.stringify({
@@ -55,7 +55,6 @@ export async function uploadWithProgress({
 
   return result as UploadResponse;
 }
-
 
 type UploadResponse = {
   success: boolean;

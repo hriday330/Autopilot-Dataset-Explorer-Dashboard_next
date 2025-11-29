@@ -75,13 +75,12 @@ export function DashboardContent({
     fetchAnalytics,
   } = useDatasetAnalytics(datasetId);
   useEffect(() => {
-
     if (initialDatasetId) {
       setSelected(initialDatasetId);
     }
 
     if (initialDatasets) {
-        setDatasets(initialDatasets)
+      setDatasets(initialDatasets);
     }
     if (initialThumbnails?.length) {
       setThumbnails(initialThumbnails);
@@ -92,7 +91,6 @@ export function DashboardContent({
       labels.splice(0, labels.length, ...initialLabels);
     }
   }, []);
-
 
   useEffect(() => {
     if (labels.length > 0 && !selectedLabelId) {
@@ -115,7 +113,6 @@ export function DashboardContent({
       }
     });
   }, [user]);
-
 
   useEffect(() => {
     if (!datasetId) return;

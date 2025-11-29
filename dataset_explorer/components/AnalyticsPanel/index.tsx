@@ -75,7 +75,9 @@ export function AnalyticsPanel({ analytics, loading }: AnalyticsPanelProps) {
           />
         </div>
 
-        <FrameSummaryTable labelsPerFrame={analytics.labelsPerFrame ?? undefined} />
+        <FrameSummaryTable
+          labelsPerFrame={analytics.labelsPerFrame ?? undefined}
+        />
       </div>
     </div>
   );

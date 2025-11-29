@@ -91,7 +91,7 @@ export function DatasetControlsCard({
               setThumbnails((prev: any[]) => [...newThumbnails, ...prev]);
               setImagesTotal((prev: number) => prev + newThumbnails.length);
               cache.invalidate(selected);
-            }
+            },
           );
         }}
         accept="image/*,.zip"
