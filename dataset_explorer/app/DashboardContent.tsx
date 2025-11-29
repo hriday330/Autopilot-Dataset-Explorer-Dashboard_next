@@ -9,7 +9,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useLoadImages } from "@hooks/useLoadImages";
 import { useUser } from "@contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { BoundingBox } from "@lib/types";
 import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
 import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
 import { useFrameNavigation } from "@hooks/useFrameNavigation";
@@ -20,10 +19,21 @@ import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
 import { useDataset } from "@contexts/DatasetContext";
 import { Button } from "@components/ui/button";
 
+import type { User } from "@supabase/supabase-js";
+import type { Dataset, Label, BoundingBox, ImageThumbnail } from "@lib/types";
+
+
 // TODO - make page size configurable
 const PAGE_SIZE = 12;
 
-export function DashboardContent() {
+export function DashboardContent({
+    initialUser,
+    initialDatasets,
+    initialDatasetId,
+    initialThumbnails,
+    initialTotal,
+    initialLabels,
+}: DashboardContentProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [selectedLabelId, setSelectedLabelId] = useState<string>("");
   const [boxes, setBoxes] = useState<Record<string, BoundingBox[]>>({});
@@ -255,4 +265,13 @@ export function DashboardContent() {
       />
     </div>
   );
+}
+
+export interface DashboardContentProps {
+  initialUser?: User;
+  initialDatasets: Dataset[] | null;
+  initialDatasetId?: string;
+  initialThumbnails: ImageThumbnail[];
+  initialTotal: number;
+  initialLabels: Label[];
 }
