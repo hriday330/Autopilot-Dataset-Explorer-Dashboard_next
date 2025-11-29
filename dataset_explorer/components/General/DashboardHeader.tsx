@@ -1,7 +1,7 @@
 "use client";
 
 import { User, Download, Trash2, Tag, BarChart3 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@components/ui/button";
 import Link from "next/link";
 import { useUser } from "@contexts/AuthContext";
 import { DatasetPicker } from "./DatasetPicker";

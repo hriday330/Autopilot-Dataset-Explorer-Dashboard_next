@@ -1,5 +1,5 @@
 import type { Label } from "@lib/types";
-import { createSupabaseServerClient } from "../supabaseClient";
+import { createSupabaseServerClient } from "@lib/server/supabaseClient";
 
 interface LabelsResult {
   data: Label[];
