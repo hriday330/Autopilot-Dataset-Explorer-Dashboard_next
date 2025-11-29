@@ -1,0 +1,292 @@
+"use client";
+
+import { DashboardHeader } from "@components/General/DashboardHeader";
+import { Sidebar } from "@components/General/Sidebar";
+import { ImageViewer } from "@components/General/ImageViewer";
+import { AnalyticsPanel } from "@components/AnalyticsPanel";
+import { DashboardFooter } from "@components/General/DashboardFooter";
+import { useState, useEffect, Suspense } from "react";
+import { useLoadImages } from "@hooks/useLoadImages";
+import { useUser } from "@contexts/AuthContext";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useLoadAnnotations } from "@hooks/useLoadAnnotations";
+import { useAutosaveAnnotations } from "@hooks/useAutosaveAnnotations";
+import { useFrameNavigation } from "@hooks/useFrameNavigation";
+import { useLabelClasses } from "@hooks/useLabelClasses";
+import { ManageLabelsModal } from "@components/General/ManageLabelsModal";
+import Spinner from "@components/ui/spinner";
+import { useDatasetAnalytics } from "@hooks/useDatasetAnalytics";
+import { useDataset } from "@contexts/DatasetContext";
+import { Button } from "@components/ui/button";
+
+import type { User } from "@supabase/supabase-js";
+import type { Dataset, Label, BoundingBox, ImageThumbnail } from "@lib/types";
+
+// TODO - make page size configurable
+const PAGE_SIZE = 12;
+
+export function DashboardContent({
+  initialUser,
+  initialDatasets,
+  initialDatasetId,
+  initialThumbnails,
+  initialTotal,
+  initialLabels,
+}: DashboardContentProps) {
+  const [currentFrame, setCurrentFrame] = useState(0);
+  const [selectedLabelId, setSelectedLabelId] = useState<string>("");
+  const [boxes, setBoxes] = useState<Record<string, BoundingBox[]>>({});
+  const [currentView, setCurrentView] = useState<"labeling" | "analytics">(
+    "labeling",
+  );
+  const router = useRouter();
+
+  const { user } = useUser();
+
+  const {
+    selected: datasetId,
+    setSelected,
+    setDatasets,
+    loadDatasets,
+    isPending: isDatasetsPending,
+  } = useDataset();
+
+  const {
+    thumbnails,
+    setThumbnails,
+    imagesTotal,
+    setImagesTotal,
+    loadImagesForDataset,
+    isPending: isImagesPending,
+  } = useLoadImages();
+
+  const searchParams = useSearchParams();
+  const datasetFromUrl = searchParams.get("dataset");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showManageLabels, setShowManageLabels] = useState(false);
+
+  const { labels, createLabel, updateLabel, reorderLabels, deleteLabel } =
+    useLabelClasses(datasetId);
+
+  const {
+    data: analytics,
+    loading,
+    fetchAnalytics,
+  } = useDatasetAnalytics(datasetId);
+  useEffect(() => {
+
+    if (initialDatasetId) {
+      setSelected(initialDatasetId);
+    }
+
+    if (initialDatasets) {
+        setDatasets(initialDatasets)
+    }
+    if (initialThumbnails?.length) {
+      setThumbnails(initialThumbnails);
+      setImagesTotal(initialTotal);
+    }
+
+    if (initialLabels?.length && labels.length === 0) {
+      labels.splice(0, labels.length, ...initialLabels);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    if (labels.length > 0 && !selectedLabelId) {
+      setSelectedLabelId(labels[0].id);
+    }
+  }, [labels]);
+
+  useEffect(() => {
+    if (labels.length === 1 && selectedLabelId !== labels[0].id) {
+      setSelectedLabelId(labels[0].id);
+    }
+  }, [labels, selectedLabelId]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    loadDatasets(user.id).then(() => {
+      if (datasetFromUrl) {
+        setSelected(datasetFromUrl);
+      }
+    });
+  }, [user]);
+
+
+  useEffect(() => {
+    if (!datasetId) return;
+    loadImagesForDataset(datasetId, currentPage, PAGE_SIZE);
+  }, [datasetId, currentPage]);
+
+  useLoadAnnotations(thumbnails, currentFrame, setBoxes);
+
+  const { waitForSave } = useAutosaveAnnotations(
+    thumbnails,
+    currentFrame,
+    boxes,
+    user,
+    fetchAnalytics,
+  );
+
+  const totalFrames = imagesTotal;
+
+  const { handleNextFrame, handlePrevFrame } = useFrameNavigation({
+    currentFrame,
+    setCurrentFrame,
+    currentPage,
+    setCurrentPage,
+    thumbnailsLength: thumbnails.length,
+    pageSize: PAGE_SIZE,
+  });
+
+  const handleLocalDeleteLabel = (labelId: string) => {
+    setBoxes((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([imageId, arr]) => [
+          imageId,
+          arr.filter((box) => box.label !== labelId),
+        ]),
+      ),
+    );
+  };
+
+  const handleExportData = async () => {
+    await waitForSave();
+    const payload = { datasetId };
+
+    const res = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) return console.error("Export failed");
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `datapilot-dataset-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const handleClearData = () => {
+    if (window.confirm("Clear all labels? This cannot be undone.")) {
+      setBoxes({});
+    }
+  };
+
+  const goToFrame = (targetFrame: number) => {
+    if (
+      !Number.isInteger(targetFrame) ||
+      targetFrame < 1 ||
+      targetFrame > totalFrames
+    ) {
+      return;
+    }
+    const index = targetFrame - 1;
+    const newPage = Math.floor(index / PAGE_SIZE) + 1;
+    const newLocalFrame = index % PAGE_SIZE;
+
+    setCurrentPage(newPage);
+    setCurrentFrame(newLocalFrame);
+  };
+
+  const labeledFramesCount = analytics?.totalLabeledFrames ?? 0;
+  const absoluteFrameNumber =
+    (currentPage - 1) * PAGE_SIZE + (currentFrame + 1);
+
+  return (
+    <div className="h-screen flex flex-col bg-[#0E0E0E] overflow-hidden">
+      <DashboardHeader
+        onExport={handleExportData}
+        onClear={handleClearData}
+        currentView={currentView}
+        onViewChange={setCurrentView}
+      />
+
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar
+          selectedLabelId={selectedLabelId}
+          labels={labels}
+          onLabelIdSelect={setSelectedLabelId}
+          onManageLabelsClick={() => setShowManageLabels(true)}
+        />
+
+        {showManageLabels && (
+          <ManageLabelsModal
+            open={showManageLabels}
+            onClose={() => setShowManageLabels(false)}
+            labels={labels}
+            createLabel={createLabel}
+            updateLabel={updateLabel}
+            deleteLabel={(labelId) =>
+              deleteLabel(labelId).then(() => handleLocalDeleteLabel(labelId))
+            }
+            reorderLabels={reorderLabels}
+          />
+        )}
+
+        <div className="flex-1 flex flex-col overflow-auto">
+          {currentView === "labeling" ? (
+            labels.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-[#A3A3A3]">
+                You must create at least one label before annotating.
+              </div>
+            ) : thumbnails.length > 0 ? (
+              <ImageViewer
+                labels={labels}
+                frame={thumbnails[currentFrame]}
+                frameNumber={absoluteFrameNumber}
+                totalFrames={totalFrames}
+                selectedLabel={selectedLabelId}
+                onPrevFrame={handlePrevFrame}
+                onNextFrame={handleNextFrame}
+                onGoToFrame={goToFrame}
+                boxes={boxes}
+                setBoxes={setBoxes}
+              />
+            ) : isImagesPending || isDatasetsPending ? (
+              <div className="text-center text-[#A3A3A3] mt-20">
+                <Spinner text="Loading your dataset..." />
+              </div>
+            ) : (
+              <div className="text-center text-[#A3A3A3] mt-20 space-x-3">
+                <span>No images in this dataset</span>
+                <Button
+                  className="border-[#2A2A2A] bg-[#1A1A1A] text-[#D4D4D4] hover:bg-[#222]"
+                  onClick={() => router.push("/datasets")}
+                >
+                  Upload images
+                </Button>
+              </div>
+            )
+          ) : (
+            <AnalyticsPanel analytics={analytics} loading={loading} />
+          )}
+        </div>
+      </div>
+
+      <DashboardFooter
+        labeledCount={labeledFramesCount}
+        totalCount={totalFrames}
+      />
+    </div>
+  );
+}
+
+export interface DashboardContentProps {
+  initialUser?: User;
+  initialDatasets: Dataset[] | null;
+  initialDatasetId?: string;
+  initialThumbnails: ImageThumbnail[];
+  initialTotal: number;
+  initialLabels: Label[];
+}

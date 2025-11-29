@@ -23,7 +23,9 @@ export type DatasetContextValue = {
   message: OperationMessage;
   setMessage: (msg: OperationMessage) => void;
   loadDatasets: (userId: string) => Promise<void>;
+  setDatasets: (datasets: Dataset[]) => void;
   createDataset: (name: string, userId: string) => Promise<void>;
+  setCounts: (counts: Record<string,number>) => void;
   isPending: boolean;
 };
 
@@ -84,14 +86,18 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (selected) {
-      localStorage.setItem("selectedDatasetId", selected);
-    }
+    if (!selected) return;
+
+    document.cookie = `selectedDatasetId=${selected}; path=/; max-age=${
+      60 * 60 * 24 * 30
+    }`;
   }, [selected]);
+
 
   const value: DatasetContextValue = useMemo(
     () => ({
       datasets,
+      setDatasets,
       counts,
       selected,
       setSelected,
@@ -99,6 +105,7 @@ export function DatasetProvider({ children }: { children: ReactNode }) {
       setMessage,
       loadDatasets,
       createDataset,
+      setCounts,
       isPending,
     }),
     [datasets, counts, selected, message, isPending],
