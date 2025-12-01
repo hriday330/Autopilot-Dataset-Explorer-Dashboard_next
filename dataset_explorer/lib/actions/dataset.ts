@@ -1,6 +1,7 @@
 "use server";
 
-import { supabaseServer } from "@lib/supabaseServer";
+import { supabaseServer } from "@lib/supabaseServer"; // TODO - change all to browser client
+import { supabase } from "@lib/supabaseClient";
 import { revalidatePath } from "next/cache";
 import type { Dataset, ImageThumbnail } from "@lib/types";
 export interface FetchDatasetsResult {
@@ -126,7 +127,7 @@ export async function createDatasetAction(name: string, userId: string) {
 export async function deleteImageAction(imageId: string, storagePath: string) {
   try {
     // Delete DB record
-    const { error: delErr } = await supabaseServer
+    const { error: delErr } = await supabase
       .from("images")
       .delete()
       .eq("id", imageId);
@@ -134,7 +135,7 @@ export async function deleteImageAction(imageId: string, storagePath: string) {
 
     // Try to remove from storage
     try {
-      await supabaseServer.storage.from("datasets").remove([storagePath]);
+      await supabase.storage.from("datasets").remove([storagePath]);
     } catch (e) {
       console.warn("Storage remove failed:", e);
     }
