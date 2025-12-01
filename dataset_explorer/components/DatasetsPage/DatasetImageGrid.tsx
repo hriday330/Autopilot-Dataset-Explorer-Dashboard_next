@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@components/ui/button";
 import DeleteConfirmDialog from "@components/ui/delete-confirm-dialog";
 import { SelectableImageCard } from "./SelectableImageCard";
@@ -40,6 +40,11 @@ function DatasetImageGrid({
   };
 
   const clearSelection = () => setSelectedIds([]);
+
+
+  useEffect(() => {
+    setSelectedIds([]);
+}, [imagesPage]);
 
   return (
     <div className="mb-6">
