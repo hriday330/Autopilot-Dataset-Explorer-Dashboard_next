@@ -19,35 +19,6 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [processingZip, setProcessingZip] = useState(false);
 
-  const handleDeleteImage = async (
-    imageId: string,
-    storagePath: string,
-    onOptimisticDelete: () => void,
-  ) => {
-    setDeletingIds((prev) => [...prev, imageId]);
-    setMessage(null);
-
-    startTransition(async () => {
-      const result = await deleteImageAction(imageId, storagePath);
-
-      if (result.error) {
-        setMessage({
-          message: `Delete error: ${result.error}`,
-          type: "error",
-        });
-      } else {
-        setMessage({
-          message: "Image deleted",
-          type: "success",
-        });
-        onOptimisticDelete();
-        handlers.onDeleteComplete?.();
-      }
-
-      setDeletingIds((prev) => prev.filter((id) => id !== imageId));
-    });
-  };
-
   const handleDeleteImages = async (
     imageIds: string[],
     storagePaths: string[],
@@ -180,7 +151,6 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     deletingIds,
     message,
     setMessage,
-    handleDeleteImage,
     handleDeleteImages,
     handleUploadFiles,
     isPending,

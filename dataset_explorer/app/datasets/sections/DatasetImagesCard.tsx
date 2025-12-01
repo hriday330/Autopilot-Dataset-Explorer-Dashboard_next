@@ -2,6 +2,8 @@
 
 import Spinner from "@components/ui/spinner";
 import DatasetImageGrid from "@components/DatasetsPage/DatasetImageGrid";
+import type { ImageThumbnail } from "@lib/types";
+import type { Dispatch, SetStateAction } from "react";
 
 export function DatasetImagesCard({
   thumbnails,
@@ -12,8 +14,8 @@ export function DatasetImagesCard({
   imagesPerPage,
   selected,
   imagesLoading,
-  handleDeleteImage,
-}: any) {
+  handleDeleteImages,
+}: DatasetImagesCardProps) {
   return (
     <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
       <h3 className="text-xl text-white mb-4">Images in dataset</h3>
@@ -31,11 +33,23 @@ export function DatasetImagesCard({
           imagesPage={imagesPage}
           imagesTotal={imagesTotal}
           imagesPerPage={imagesPerPage}
-          onDelete={handleDeleteImage}
+          onDelete={handleDeleteImages}
           onPrevPage={() => setImagesPage((p: number) => Math.max(1, p - 1))}
           onNextPage={() => setImagesPage((p: number) => p + 1)}
         />
       )}
     </div>
   );
+}
+
+export interface DatasetImagesCardProps {
+  thumbnails: ImageThumbnail[];
+  deletingIds: string[];
+  imagesPage: number;
+  setImagesPage: Dispatch<SetStateAction<number>>
+  selected: string;
+  imagesLoading: boolean;
+  imagesTotal: number;
+  imagesPerPage: number;
+  handleDeleteImages: (imageId: string[], storagePath: string[]) => void;
 }

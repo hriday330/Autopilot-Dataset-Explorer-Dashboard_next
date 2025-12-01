@@ -185,7 +185,7 @@ export function DatasetsContent({
           imagesPerPage={imagesPerPage}
           selected={selected}
           imagesLoading={imagesLoading}
-          handleDeleteImage={handleDeleteImages}
+          handleDeleteImages={handleDeleteImages}
         />
 
         <DatasetActionsCard selected={selected} router={router} />
