@@ -67,7 +67,7 @@ export function DatasetsContent({
   const {
     uploading,
     deletingIds,
-    handleDeleteImage: deleteImageHandler,
+    handleDeleteImages: deleteImagesHandler,
     processingZip,
     handleUploadFiles,
     message: opMessage,
@@ -139,10 +139,10 @@ export function DatasetsContent({
     }
   }, [message]);
 
-  const handleDeleteImage = (imageId: string, storagePath: string) => {
-    deleteImageHandler(imageId, storagePath, () => {
-      setThumbnails((prev) => prev.filter((t) => t.id !== imageId));
-      setImagesTotal((prev) => Math.max(0, prev - 1));
+  const handleDeleteImages = (imageIds: string[], storagePaths: string[]) => {
+    deleteImagesHandler(imageIds, storagePaths, () => {
+      setThumbnails((prev) => prev.filter((t) => !imageIds.includes(t.id)));
+      setImagesTotal((prev) => Math.max(0, prev - imageIds.length));
       cache.invalidate(selected);
     });
   };
@@ -185,7 +185,7 @@ export function DatasetsContent({
           imagesPerPage={imagesPerPage}
           selected={selected}
           imagesLoading={imagesLoading}
-          handleDeleteImage={handleDeleteImage}
+          handleDeleteImage={handleDeleteImages}
         />
 
         <DatasetActionsCard selected={selected} router={router} />

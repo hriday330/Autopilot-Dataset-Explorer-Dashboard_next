@@ -17,7 +17,7 @@ type Props = {
   imagesPage: number;
   imagesTotal: number;
   imagesPerPage: number;
-  onDelete: (imageId: string, storagePath: string) => void;
+  onDelete: (imageId: string[], storagePath: string[]) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
 };
@@ -56,10 +56,12 @@ function DatasetImageGrid({
               <div className="flex gap-2">
                 <DeleteConfirmDialog
                   onConfirm={() => {
-                    selectedIds.forEach((id) => {
-                      const img = thumbnails.find((t) => t.id === id);
-                      if (img) onDelete(id, img.storage_path);
-                    });
+                    const ids = selectedIds;
+                    const paths = thumbnails
+                      .filter((t) => selectedIds.includes(t.id))
+                      .map((t) => t.storage_path);
+
+                    onDelete(ids, paths);
                     clearSelection();
                   }}
                 >

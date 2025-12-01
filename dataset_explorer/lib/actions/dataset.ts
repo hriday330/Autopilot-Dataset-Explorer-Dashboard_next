@@ -146,3 +146,33 @@ export async function deleteImageAction(imageId: string, storagePath: string) {
     return { success: false, error: err?.message ?? String(err) };
   }
 }
+
+export async function deleteImagesAction(
+  imageIds: string[],
+  storagePaths: string[],
+) {
+  try {
+    // 1. Delete DB records in one query
+    const { error: dbErr } = await supabase
+      .from("images")
+      .delete()
+      .in("id", imageIds);
+
+    if (dbErr) {
+      return { success: false, error: dbErr.message };
+    }
+
+    // 2. Delete storage files in one operation
+    const { error: storageErr } = await supabase.storage
+      .from("datasets")
+      .remove(storagePaths);
+
+    if (storageErr) {
+      console.warn("Storage delete failed:", storageErr.message);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message ?? String(err) };
+  }
+}
