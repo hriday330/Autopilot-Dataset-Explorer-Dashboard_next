@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@components/ui/button";
 import DeleteConfirmDialog from "@components/ui/delete-confirm-dialog";
+import { SelectableImageCard } from "./SelectableImageCard";
 
 export type ImageThumbnail = {
   id: string;
@@ -16,7 +17,7 @@ type Props = {
   imagesPage: number;
   imagesTotal: number;
   imagesPerPage: number;
-  onDelete: (imageId: string, storagePath: string) => void;
+  onDelete: (imageId: string[], storagePath: string[]) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
 };
@@ -31,49 +32,73 @@ function DatasetImageGrid({
   onPrevPage,
   onNextPage,
 }: Props) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const clearSelection = () => setSelectedIds([]);
+
+
+  useEffect(() => {
+    setSelectedIds([]);
+}, [imagesPage]);
+
   return (
     <div className="mb-6">
       {!thumbnails || thumbnails.length === 0 ? (
         <div className="text-sm text-[#6B6B6B]">No images in this dataset.</div>
       ) : (
         <>
+          {selectedIds.length > 0 && (
+            <div className="flex items-center justify-between mb-3 px-1">
+              <div className="text-sm text-[#A3A3A3]">
+                {selectedIds.length} selected
+              </div>
+
+              <div className="flex gap-2">
+                <DeleteConfirmDialog
+                  onConfirm={() => {
+                    const ids = selectedIds;
+                    const paths = thumbnails
+                      .filter((t) => selectedIds.includes(t.id))
+                      .map((t) => t.storage_path);
+
+                    onDelete(ids, paths);
+                    clearSelection();
+                  }}
+                >
+                  <Button className="bg-[#E82127] hover:bg-red-700">
+                    Delete Selected
+                  </Button>
+                </DeleteConfirmDialog>
+
+                <Button
+                  variant="outline"
+                  className="border-[#1F1F1F] text-[#A3A3A3] hover:bg-[#1F1F1F]"
+                  onClick={clearSelection}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+          `
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {thumbnails.map((t) => (
-              <div
+              <SelectableImageCard
                 key={t.id}
-                className="relative bg-[#0B0B0B] border border-[#1F1F1F] rounded overflow-hidden"
-              >
-                <DeleteConfirmDialog
-                  onConfirm={() => onDelete(t.id, t.storage_path)}
-                >
-                  <button
-                    disabled={deletingIds.includes(t.id)}
-                    className="absolute top-1 right-1 z-10 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
-                    title="Delete image"
-                  >
-                    {deletingIds.includes(t.id) ? (
-                      <span className="text-xs">…</span>
-                    ) : (
-                      <span className="text-xs">×</span>
-                    )}
-                  </button>
-                </DeleteConfirmDialog>
-                {t.url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={t.url}
-                    alt={t.storage_path}
-                    className="w-full h-32 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-32 flex items-center justify-center text-xs text-[#6B6B6B]">
-                    Preview not available
-                  </div>
-                )}
-              </div>
+                id={t.id}
+                url={t.url}
+                storagePath={t.storage_path}
+                selected={selectedIds.includes(t.id)}
+                onSelect={() => toggleSelect(t.id)}
+                disabled={deletingIds.includes(t.id)}
+              />
             ))}
           </div>
-
           {/* Pagination controls */}
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-[#A3A3A3]">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deleteImageAction } from "@lib/actions/dataset";
+import { deleteImagesAction } from "@lib/actions/dataset";
 import { supabase } from "@lib/supabaseClient";
 import { uploadWithProgress } from "@lib/uploadWithProgress";
 import type { ImageThumbnail, OperationMessage } from "@lib/types";
@@ -19,16 +19,18 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [processingZip, setProcessingZip] = useState(false);
 
-  const handleDeleteImage = async (
-    imageId: string,
-    storagePath: string,
+  const handleDeleteImages = async (
+    imageIds: string[],
+    storagePaths: string[],
     onOptimisticDelete: () => void,
   ) => {
-    setDeletingIds((prev) => [...prev, imageId]);
+    // Mark all as deleting
+    setDeletingIds((prev) => [...prev, ...imageIds]);
     setMessage(null);
 
     startTransition(async () => {
-      const result = await deleteImageAction(imageId, storagePath);
+      // Bulk delete — both arrays must match in length + order!
+      const result = await deleteImagesAction(imageIds, storagePaths);
 
       if (result.error) {
         setMessage({
@@ -37,14 +39,21 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
         });
       } else {
         setMessage({
-          message: "Image deleted",
+          message:
+            imageIds.length > 1
+              ? `${imageIds.length} images deleted`
+              : "Image deleted",
           type: "success",
         });
+
+        // Remove them from UI now
         onOptimisticDelete();
+
         handlers.onDeleteComplete?.();
       }
 
-      setDeletingIds((prev) => prev.filter((id) => id !== imageId));
+      // Remove all deleted IDs from the deleting state
+      setDeletingIds((prev) => prev.filter((id) => !imageIds.includes(id)));
     });
   };
 
@@ -142,7 +151,7 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     deletingIds,
     message,
     setMessage,
-    handleDeleteImage,
+    handleDeleteImages,
     handleUploadFiles,
     isPending,
     uploadProgress,
