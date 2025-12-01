@@ -1,7 +1,6 @@
 "use server";
 
-import { supabaseServer } from "@lib/supabaseServer"; // TODO - change all to browser client
-import { supabase } from "@lib/supabaseClient";
+import { supabaseServer } from "@lib/supabaseServer"; // This is all server actions so supabaseServer MUST be used here
 import { revalidatePath } from "next/cache";
 import type { Dataset, ImageThumbnail } from "@lib/types";
 export interface FetchDatasetsResult {
@@ -127,7 +126,7 @@ export async function createDatasetAction(name: string, userId: string) {
 export async function deleteImageAction(imageId: string, storagePath: string) {
   try {
     // Delete DB record
-    const { error: delErr } = await supabase
+    const { error: delErr } = await supabaseServer
       .from("images")
       .delete()
       .eq("id", imageId);
@@ -135,7 +134,7 @@ export async function deleteImageAction(imageId: string, storagePath: string) {
 
     // Try to remove from storage
     try {
-      await supabase.storage.from("datasets").remove([storagePath]);
+      await supabaseServer.storage.from("datasets").remove([storagePath]);
     } catch (e) {
       console.warn("Storage remove failed:", e);
     }
@@ -153,7 +152,7 @@ export async function deleteImagesAction(
 ) {
   try {
     // 1. Delete DB records in one query
-    const { error: dbErr } = await supabase
+    const { error: dbErr } = await supabaseServer
       .from("images")
       .delete()
       .in("id", imageIds);
@@ -163,14 +162,14 @@ export async function deleteImagesAction(
     }
 
     // 2. Delete storage files in one operation
-    const { error: storageErr } = await supabase.storage
+    const { error: storageErr } = await supabaseServer.storage
       .from("datasets")
       .remove(storagePaths);
 
     if (storageErr) {
       console.warn("Storage delete failed:", storageErr.message);
     }
-
+    revalidatePath("/datasets");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message ?? String(err) };

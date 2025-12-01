@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { deleteImageAction, deleteImagesAction } from "@lib/actions/dataset";
+import { deleteImagesAction } from "@lib/actions/dataset";
 import { supabase } from "@lib/supabaseClient";
 import { uploadWithProgress } from "@lib/uploadWithProgress";
 import type { ImageThumbnail, OperationMessage } from "@lib/types";
