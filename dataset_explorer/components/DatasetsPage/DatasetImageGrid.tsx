@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@components/ui/button";
 import DeleteConfirmDialog from "@components/ui/delete-confirm-dialog";
+import { SelectableImageCard } from "./SelectableImageCard";
 
 export type ImageThumbnail = {
   id: string;
   url: string;
   storage_path: string;
 };
-
+  
 type Props = {
   thumbnails: ImageThumbnail[];
   deletingIds: string[];
@@ -31,6 +32,14 @@ function DatasetImageGrid({
   onPrevPage,
   onNextPage,
 }: Props) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const toggleSelect = (id: string) => {
+  setSelectedIds((prev) =>
+    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  );
+};
+
+
   return (
     <div className="mb-6">
       {!thumbnails || thumbnails.length === 0 ? (
@@ -39,38 +48,15 @@ function DatasetImageGrid({
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {thumbnails.map((t) => (
-              <div
+              <SelectableImageCard
                 key={t.id}
-                className="relative bg-[#0B0B0B] border border-[#1F1F1F] rounded overflow-hidden"
-              >
-                <DeleteConfirmDialog
-                  onConfirm={() => onDelete(t.id, t.storage_path)}
-                >
-                  <button
-                    disabled={deletingIds.includes(t.id)}
-                    className="absolute top-1 right-1 z-10 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
-                    title="Delete image"
-                  >
-                    {deletingIds.includes(t.id) ? (
-                      <span className="text-xs">…</span>
-                    ) : (
-                      <span className="text-xs">×</span>
-                    )}
-                  </button>
-                </DeleteConfirmDialog>
-                {t.url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={t.url}
-                    alt={t.storage_path}
-                    className="w-full h-32 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-32 flex items-center justify-center text-xs text-[#6B6B6B]">
-                    Preview not available
-                  </div>
-                )}
-              </div>
+                id={t.id}
+                url={t.url}
+                storagePath={t.storage_path}
+                selected={selectedIds.includes(t.id)}
+                onSelect={() => toggleSelect(t.id)}
+                disabled={deletingIds.includes(t.id)}
+              />
             ))}
           </div>
 
