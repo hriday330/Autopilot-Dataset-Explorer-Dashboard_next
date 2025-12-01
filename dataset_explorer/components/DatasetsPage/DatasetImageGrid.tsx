@@ -10,7 +10,7 @@ export type ImageThumbnail = {
   url: string;
   storage_path: string;
 };
-  
+
 type Props = {
   thumbnails: ImageThumbnail[];
   deletingIds: string[];
@@ -34,11 +34,12 @@ function DatasetImageGrid({
 }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const toggleSelect = (id: string) => {
-  setSelectedIds((prev) =>
-    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-  );
-};
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
 
+  const clearSelection = () => setSelectedIds([]);
 
   return (
     <div className="mb-6">
@@ -46,6 +47,38 @@ function DatasetImageGrid({
         <div className="text-sm text-[#6B6B6B]">No images in this dataset.</div>
       ) : (
         <>
+          {selectedIds.length > 0 && (
+            <div className="flex items-center justify-between mb-3 px-1">
+              <div className="text-sm text-[#A3A3A3]">
+                {selectedIds.length} selected
+              </div>
+
+              <div className="flex gap-2">
+                <DeleteConfirmDialog
+                  onConfirm={() => {
+                    selectedIds.forEach((id) => {
+                      const img = thumbnails.find((t) => t.id === id);
+                      if (img) onDelete(id, img.storage_path);
+                    });
+                    clearSelection();
+                  }}
+                >
+                  <Button className="bg-[#E82127] hover:bg-red-700">
+                    Delete Selected
+                  </Button>
+                </DeleteConfirmDialog>
+
+                <Button
+                  variant="outline"
+                  className="border-[#1F1F1F] text-[#A3A3A3] hover:bg-[#1F1F1F]"
+                  onClick={clearSelection}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+          `
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {thumbnails.map((t) => (
               <SelectableImageCard
@@ -59,7 +92,6 @@ function DatasetImageGrid({
               />
             ))}
           </div>
-
           {/* Pagination controls */}
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-[#A3A3A3]">
