@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, FolderOpen, Plus } from "lucide-react";
+import { Check, ChevronDown, File, FolderOpen, Plus } from "lucide-react";
 
 import { cn } from "@components/ui/utils";
 import { useDataset } from "@contexts/DatasetContext";
@@ -109,7 +109,7 @@ export function DatasetPicker() {
                 onSelect={() => router.push("/datasets")}
                 className="flex items-center gap-2 px-3 py-2 text-[#D4D4D4] hover:bg-[#1A1A1A]"
               >
-                <Plus className="w-4 h-4" />
+                <File className="w-4 h-4" />
                 <span>Manage your dataset</span>
               </CommandItem>
             </CommandGroup>

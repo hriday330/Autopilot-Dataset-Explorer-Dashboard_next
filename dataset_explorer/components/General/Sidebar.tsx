@@ -33,7 +33,6 @@ export function Sidebar({
   const shortcuts = [
     { keys: ["←", "→"], description: "Navigate frames" },
     { keys: ["↑", "↓"], description: "Select labels" },
-    { keys: ["Space"], description: "Play/Pause" },
   ];
 
   const toggleLabel = (id: string) => {
