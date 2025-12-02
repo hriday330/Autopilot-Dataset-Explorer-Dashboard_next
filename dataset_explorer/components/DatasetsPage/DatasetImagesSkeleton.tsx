@@ -5,7 +5,7 @@ import { Skeleton } from "@components/ui/skeleton";
 export interface DatasetImagesSkeletonProps {
   text?: string;
   perPage?: number;
-};
+}
 
 export function DatasetImagesSkeleton({
   text = "Loading your dataset...",

@@ -15,14 +15,17 @@ export function DatasetImagesCard({
   selected,
   imagesLoading,
   handleDeleteImages,
-  onPageSizeChange
+  onPageSizeChange,
 }: DatasetImagesCardProps) {
   return (
     <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
       <h3 className="text-xl text-white mb-4">Images in dataset</h3>
 
       {imagesLoading ? (
-        <DatasetImagesSkeleton text="Loading your dataset..." perPage={imagesPerPage}/>
+        <DatasetImagesSkeleton
+          text="Loading your dataset..."
+          perPage={imagesPerPage}
+        />
       ) : !selected ? (
         <div className="text-sm text-[#6B6B6B]">
           Select a dataset to view images.
