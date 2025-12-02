@@ -21,6 +21,7 @@ import { Button } from "@components/ui/button";
 
 import type { User } from "@supabase/supabase-js";
 import type { Dataset, Label, BoundingBox, ImageThumbnail } from "@lib/types";
+import { useLabelKeyboardNavigation } from "@components/General/hooks/useLabelKeyboardNavigation";
 
 // TODO - make page size configurable
 const PAGE_SIZE = 12;
@@ -68,6 +69,10 @@ export function DashboardContent({
 
   const { labels, createLabel, updateLabel, reorderLabels, deleteLabel } =
     useLabelClasses(datasetId);
+
+  useLabelKeyboardNavigation(labels, selectedLabelId, (newId) => {
+    setSelectedLabelId(newId);
+  });
 
   const {
     data: analytics,

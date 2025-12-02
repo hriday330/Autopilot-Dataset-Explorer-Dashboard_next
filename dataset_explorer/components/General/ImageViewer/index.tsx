@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import type { BoundingBox, Label } from "@lib/types";
 import { useBoundingBoxes } from "./hooks/useBoundingBoxes";
 import { useSelectFrame } from "./hooks/useSelectFrame";
+import { useAutoplayFrames } from "./hooks/useAutoplayFrames";
 
 interface Frame {
   id: string;
@@ -42,7 +43,7 @@ export function ImageViewer({
 }: ImageViewerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
+  const [drawingDisabled, setDrawingDisabled] = useState(false);
   const {
     getBoundingBoxLabelColor,
     getBoundingBoxLabelName,
@@ -70,21 +71,18 @@ export function ImageViewer({
     isValidFrame,
   } = useSelectFrame(frameNumber, totalFrames, onGoToFrame);
 
-  // TODO - work on autoplay logic
+  
   useEffect(() => {
     // Sync displayed number when frame changes externally
     setFrameInput(frameNumber.toString());
   }, [frameNumber]);
 
-  // Auto-play frames
-  useEffect(() => {
-    if (isPlaying) {
-      const interval = setInterval(() => {
-        onNextFrame();
-      }, 2000);
-      return () => clearInterval(interval);
-    }
-  }, [isPlaying, onNextFrame]);
+  useAutoplayFrames(
+    isPlaying,
+    500, 
+    onNextFrame,
+    setDrawingDisabled,
+  );
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
@@ -174,7 +172,7 @@ export function ImageViewer({
         ))}
 
         {/* Current Drawing Box */}
-        {currentBox && (
+        {!drawingDisabled && currentBox && (
           <div
             className="absolute border-2 border-dashed rounded pointer-events-none"
             style={{
