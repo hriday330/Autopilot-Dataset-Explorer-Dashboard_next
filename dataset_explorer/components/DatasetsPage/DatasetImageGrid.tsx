@@ -29,7 +29,7 @@ type Props = {
   onNextPage: () => void;
 };
 
-const PAGE_SIZE_OPTIONS = [12, 20, 50]
+const PAGE_SIZE_OPTIONS = [12, 20, 50];
 
 function DatasetImageGrid({
   thumbnails,

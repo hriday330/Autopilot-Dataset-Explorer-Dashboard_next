@@ -147,10 +147,10 @@ export function DatasetsContent({
     });
   };
   const handlePageSizeChange = (size: number) => {
-    setImagesPage(1); 
-    setImagesPerPage(size)
-    cache.invalidate(selected)
-};
+    setImagesPage(1);
+    setImagesPerPage(size);
+    cache.invalidate(selected);
+  };
 
   const handleCreateDataset = () => {
     if (!newName || !user) return;

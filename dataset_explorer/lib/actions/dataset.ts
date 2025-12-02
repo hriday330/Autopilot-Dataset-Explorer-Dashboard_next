@@ -78,10 +78,9 @@ export async function fetchImagesForDatasetAction(
     }
 
     const paths = data.map((img) => img.storage_path);
-    const { data: signedURLs, error: signError } =
-      await supabaseServer.storage
-        .from("datasets")
-        .createSignedUrls(paths, 3600);
+    const { data: signedURLs, error: signError } = await supabaseServer.storage
+      .from("datasets")
+      .createSignedUrls(paths, 3600);
 
     if (signError) throw signError;
     const thumbs: ImageThumbnail[] = data.map((img, i) => ({
@@ -91,7 +90,6 @@ export async function fetchImagesForDatasetAction(
     }));
 
     return { thumbnails: thumbs, total: count ?? 0 };
-
   } catch (err: any) {
     return { thumbnails: [], total: 0, error: err?.message ?? String(err) };
   }
