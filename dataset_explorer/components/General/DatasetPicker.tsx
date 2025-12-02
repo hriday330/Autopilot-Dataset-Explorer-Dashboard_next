@@ -74,7 +74,6 @@ export function DatasetPicker() {
             </CommandEmpty>
 
             <CommandGroup
-              heading="Datasets"
               className="max-h-[220px] overflow-y-auto"
             >
               {datasets.map((d) => (

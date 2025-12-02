@@ -7,10 +7,31 @@ export function useSelectFrame(
 ) {
   const [frameInput, setFrameInput] = useState(frameNumber.toString());
 
-  // Keep input in sync with external frame changes
   useEffect(() => {
     setFrameInput(frameNumber.toString());
   }, [frameNumber]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        active &&
+        (["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName) ||
+          active.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key === "ArrowLeft" && frameNumber > 1) {
+        onGoToFrame(frameNumber - 1);
+      } else if (e.key === "ArrowRight" && frameNumber < totalFrames) {
+        onGoToFrame(frameNumber + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [frameNumber, totalFrames, onGoToFrame]);
 
   const isValidFrame = useCallback(
     (value: string) => {
