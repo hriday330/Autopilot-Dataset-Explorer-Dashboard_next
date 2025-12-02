@@ -1,9 +1,9 @@
 "use client";
 
-import Spinner from "@components/ui/spinner";
 import DatasetImageGrid from "@components/DatasetsPage/DatasetImageGrid";
 import type { ImageThumbnail } from "@lib/types";
 import type { Dispatch, SetStateAction } from "react";
+import { DatasetImagesSkeleton } from "@components/DatasetsPage/DatasetImagesSkeleton";
 
 export function DatasetImagesCard({
   thumbnails,
@@ -22,7 +22,7 @@ export function DatasetImagesCard({
       <h3 className="text-xl text-white mb-4">Images in dataset</h3>
 
       {imagesLoading ? (
-        <Spinner text="Loading your images" />
+        <DatasetImagesSkeleton text="Loading your dataset..." perPage={imagesPerPage}/>
       ) : !selected ? (
         <div className="text-sm text-[#6B6B6B]">
           Select a dataset to view images.
