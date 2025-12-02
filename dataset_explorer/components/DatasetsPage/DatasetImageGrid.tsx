@@ -4,6 +4,12 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@components/ui/button";
 import DeleteConfirmDialog from "@components/ui/delete-confirm-dialog";
 import { SelectableImageCard } from "./SelectableImageCard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@components/ui/select";
 
 export type ImageThumbnail = {
   id: string;
@@ -18,9 +24,12 @@ type Props = {
   imagesTotal: number;
   imagesPerPage: number;
   onDelete: (imageId: string[], storagePath: string[]) => void;
+  onPageSizeChange: (size: number) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
 };
+
+const PAGE_SIZE_OPTIONS = [12, 20, 50]
 
 function DatasetImageGrid({
   thumbnails,
@@ -31,6 +40,7 @@ function DatasetImageGrid({
   onDelete,
   onPrevPage,
   onNextPage,
+  onPageSizeChange,
 }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const toggleSelect = (id: string) => {
@@ -41,10 +51,9 @@ function DatasetImageGrid({
 
   const clearSelection = () => setSelectedIds([]);
 
-
   useEffect(() => {
     setSelectedIds([]);
-}, [imagesPage]);
+  }, [imagesPage]);
 
   return (
     <div className="mb-6">
@@ -105,6 +114,47 @@ function DatasetImageGrid({
               Showing page {imagesPage} — {imagesTotal} images
             </div>
             <div className="flex gap-2">
+              <Select
+                value={String(imagesPerPage)}
+                onValueChange={(v) => onPageSizeChange(Number(v))}
+              >
+                <SelectTrigger
+                  className="
+              w-[110px] 
+              h-9 
+              bg-transparent 
+              border-[#1F1F1F] 
+              text-[#A3A3A3] 
+              text-sm 
+              hover:bg-[#1F1F1F] 
+              focus:ring-0 
+              focus:ring-offset-0
+            "
+                >
+                  <span>{imagesPerPage} / page</span>
+                </SelectTrigger>
+                <SelectContent
+                  className="
+              bg-[#0E0E0E] 
+              border-[#1F1F1F] 
+              text-[#A3A3A3]
+            "
+                >
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <SelectItem
+                      key={size}
+                      value={String(size)}
+                      className="
+                  text-[#A3A3A3] 
+                  data-[highlighted]:bg-[#1F1F1F] 
+                  data-[highlighted]:text-white
+                "
+                    >
+                      {size} / page
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 className="border-[#1F1F1F] text-[#A3A3A3]"

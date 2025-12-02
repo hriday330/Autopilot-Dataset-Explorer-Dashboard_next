@@ -121,15 +121,18 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
         handlers.onUploadComplete?.();
         return;
       }
-      const thumbWithUrl = await Promise.all(
-        result.thumbnails.map(async (t: ImageThumbnail) => {
-          const { data } = await supabase.storage
-            .from("datasets")
-            .createSignedUrl(t.storage_path, 3600);
 
-          return { ...t, url: data?.signedUrl ?? "" };
-        }),
-      );
+      const paths = result.thumbnails.map((t) => t.storage_path);
+
+      const { data: signed } = await supabase.storage
+        .from("datasets")
+        .createSignedUrls(paths, 3600);
+
+      // map back to original thumbnails
+      const thumbWithUrl = result.thumbnails.map((t, i) => ({
+        ...t,
+        url: signed?.[i]?.signedUrl ?? "",
+      }));
 
       onOptimisticAdd(thumbWithUrl);
 
