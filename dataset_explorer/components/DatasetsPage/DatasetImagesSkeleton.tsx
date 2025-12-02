@@ -9,7 +9,7 @@ export interface DatasetImagesSkeletonProps {
 
 export function DatasetImagesSkeleton({
   text = "Loading your dataset...",
-  perPage = 24,
+  perPage = 12,
 }: DatasetImagesSkeletonProps) {
   return (
     <div className="mb-6">
