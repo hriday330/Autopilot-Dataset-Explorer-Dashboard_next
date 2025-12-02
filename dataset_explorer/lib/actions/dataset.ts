@@ -77,29 +77,21 @@ export async function fetchImagesForDatasetAction(
       return { thumbnails: [], total: count ?? 0 };
     }
 
-    // Generate signed URLs for thumbnails
-    const thumbs: ImageThumbnail[] = [];
-    for (const img of data) {
-      try {
-        const path = img.storage_path;
-        const signed = await supabaseServer.storage
-          .from("datasets")
-          .createSignedUrl(path, 3600); // 1 hour
-        let url = "";
-        if ((signed as any).data?.signedUrl)
-          url = (signed as any).data.signedUrl;
-        else if ((signed as any).data?.signedURL)
-          url = (signed as any).data.signedURL;
-        else if ((signed as any).publicURL) url = (signed as any).publicURL;
-        else if ((signed as any).data?.publicUrl)
-          url = (signed as any).data.publicUrl;
-        thumbs.push({ id: img.id, url, storage_path: path });
-      } catch (e) {
-        thumbs.push({ id: img.id, url: "", storage_path: img.storage_path });
-      }
-    }
+    const paths = data.map((img) => img.storage_path);
+    const { data: signedURLs, error: signError } =
+      await supabaseServer.storage
+        .from("datasets")
+        .createSignedUrls(paths, 3600);
+
+    if (signError) throw signError;
+    const thumbs: ImageThumbnail[] = data.map((img, i) => ({
+      id: img.id,
+      storage_path: img.storage_path,
+      url: signedURLs?.[i]?.signedUrl ?? "",
+    }));
 
     return { thumbnails: thumbs, total: count ?? 0 };
+
   } catch (err: any) {
     return { thumbnails: [], total: 0, error: err?.message ?? String(err) };
   }

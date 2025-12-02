@@ -36,7 +36,7 @@ export function DatasetsContent({
 
   const [newName, setNewName] = useState("");
   const [imagesPage, setImagesPage] = useState(1);
-  const [imagesPerPage] = useState(12);
+  const [imagesPerPage, setImagesPerPage] = useState(12);
   const [initialLoading, setInitialLoading] = useState(true);
 
   const {
@@ -146,6 +146,11 @@ export function DatasetsContent({
       cache.invalidate(selected);
     });
   };
+  const handlePageSizeChange = (size: number) => {
+    setImagesPage(1); 
+    setImagesPerPage(size)
+    cache.invalidate(selected)
+};
 
   const handleCreateDataset = () => {
     if (!newName || !user) return;
@@ -185,6 +190,7 @@ export function DatasetsContent({
           imagesPerPage={imagesPerPage}
           selected={selected}
           imagesLoading={imagesLoading}
+          onPageSizeChange={handlePageSizeChange}
           handleDeleteImages={handleDeleteImages}
         />
 

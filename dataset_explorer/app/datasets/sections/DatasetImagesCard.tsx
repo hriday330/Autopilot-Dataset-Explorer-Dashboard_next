@@ -15,6 +15,7 @@ export function DatasetImagesCard({
   selected,
   imagesLoading,
   handleDeleteImages,
+  onPageSizeChange
 }: DatasetImagesCardProps) {
   return (
     <div className="bg-[#121212] border border-[#1F1F1F] rounded-lg p-6">
@@ -34,6 +35,7 @@ export function DatasetImagesCard({
           imagesTotal={imagesTotal}
           imagesPerPage={imagesPerPage}
           onDelete={handleDeleteImages}
+          onPageSizeChange={onPageSizeChange}
           onPrevPage={() => setImagesPage((p: number) => Math.max(1, p - 1))}
           onNextPage={() => setImagesPage((p: number) => p + 1)}
         />
@@ -46,10 +48,11 @@ export interface DatasetImagesCardProps {
   thumbnails: ImageThumbnail[];
   deletingIds: string[];
   imagesPage: number;
-  setImagesPage: Dispatch<SetStateAction<number>>
+  setImagesPage: Dispatch<SetStateAction<number>>;
   selected: string;
   imagesLoading: boolean;
   imagesTotal: number;
   imagesPerPage: number;
   handleDeleteImages: (imageId: string[], storagePath: string[]) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }
