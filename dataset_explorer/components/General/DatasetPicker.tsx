@@ -73,9 +73,7 @@ export function DatasetPicker() {
               No datasets found.
             </CommandEmpty>
 
-            <CommandGroup
-              className="max-h-[220px] overflow-y-auto"
-            >
+            <CommandGroup className="max-h-[220px] overflow-y-auto">
               {datasets.map((d) => (
                 <CommandItem
                   key={d.id}

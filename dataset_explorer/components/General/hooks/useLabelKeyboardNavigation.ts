@@ -6,14 +6,12 @@ export function useLabelKeyboardNavigation(
   selectedLabelId: string | null,
   onSelectLabel: (id: string) => void,
 ) {
-  
   const currentIndex = labels.findIndex((l) => l.id === selectedLabelId);
 
   const selectPrev = useCallback(() => {
     if (labels.length === 0) return;
 
-    const nextIndex =
-      currentIndex <= 0 ? labels.length - 1 : currentIndex - 1;
+    const nextIndex = currentIndex <= 0 ? labels.length - 1 : currentIndex - 1;
 
     onSelectLabel(labels[nextIndex].id);
   }, [labels, currentIndex, onSelectLabel]);
@@ -21,8 +19,7 @@ export function useLabelKeyboardNavigation(
   const selectNext = useCallback(() => {
     if (labels.length === 0) return;
 
-    const nextIndex =
-      currentIndex >= labels.length - 1 ? 0 : currentIndex + 1;
+    const nextIndex = currentIndex >= labels.length - 1 ? 0 : currentIndex + 1;
 
     onSelectLabel(labels[nextIndex].id);
   }, [labels, currentIndex, onSelectLabel]);
