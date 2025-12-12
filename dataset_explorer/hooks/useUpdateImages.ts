@@ -3,13 +3,16 @@
 import { useState, useTransition } from "react";
 import { deleteImagesAction } from "@lib/actions/dataset";
 import { supabase } from "@lib/supabaseClient";
-import { uploadWithProgress } from "@lib/uploadWithProgress";
 import type { ImageThumbnail, OperationMessage } from "@lib/types";
+import { extractImagesFromZip } from "@lib/zipUtils";
+import { createProcessEntry } from "@lib/processEntry";
 
 interface ImageOperationsHandlers {
   onDeleteComplete?: () => void;
   onUploadComplete?: () => void;
 }
+
+const CONCURRENCY = 8;
 
 export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
   const [uploading, setUploading] = useState(false);
@@ -57,97 +60,88 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
     });
   };
 
-  const handleUploadFiles = async (
-    files: FileList | null,
-    datasetId: string,
-    datasetName: string,
-    userId: string,
-    onOptimisticAdd: (thumbnails: ImageThumbnail[]) => void,
-  ) => {
-    if (!files || files.length === 0 || !userId || !datasetId) return;
+async function handleUploadFiles(
+  files: FileList | null,
+  datasetId: string,
+  datasetName: string,
+  userId: string,
+  onOptimisticAdd: (thumbs: ImageThumbnail[]) => void
+) {
+  if (!files || !files.length) return;
 
-    setUploading(true);
-    setMessage(null);
+  const file = files[0];
+  const isZip = file.name.toLowerCase().endsWith(".zip");
 
-    try {
-      const file = files[0]; // only one file is supported currently (either single image or zip) TODO - improve this in future to support up to 15 files upload without zip
-      setUploadProgress(0);
+  if (!isZip) {
+    // Let your existing single-file code handle this
+    return;
+  }
 
-      const result = await uploadWithProgress({
-        file,
-        datasetId,
-        datasetName,
-        userId,
-        onProgress: setUploadProgress,
-      });
+  setUploading(true);
+  setProcessingZip(true);
 
-      if (!result.success) {
-        setMessage({ message: `Upload error: ${result.error}`, type: "error" });
-        return;
-      }
-      if (result.isZip) {
-        setProcessingZip(true);
+  // 1. Unzip
+  const entries = await extractImagesFromZip(file);
+  const totalFiles = entries.length;
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/process-zip`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            },
-            body: JSON.stringify({
-              datasetId,
-              datasetName,
-              userId,
-              zipPath: result.zipPath,
-            }),
-          },
-        );
+  const uploadedPaths: string[] = [];
 
-        const fx = await res.json();
-        setProcessingZip(false);
+  // 2. Create processEntry
+  const processEntry = createProcessEntry({
+    datasetId,
+    datasetName,
+    userId,
+    totalFiles,
+    onFileUploaded: (paths) => {
+      uploadedPaths.push(...paths);
+    },
+    updateProgress: setUploadProgress,
+  });
 
-        if (!fx.success) {
-          setMessage({
-            message: "Processing error: " + fx.error,
-            type: "error",
-          });
-          return;
-        }
-
-        setMessage({ message: "Upload complete", type: "success" });
-        handlers.onUploadComplete?.();
-        return;
-      }
-
-      const paths = result.thumbnails.map((t) => t.storage_path);
-
-      const { data: signed } = await supabase.storage
-        .from("datasets")
-        .createSignedUrls(paths, 3600);
-
-      // map back to original thumbnails
-      const thumbWithUrl = result.thumbnails.map((t, i) => ({
-        ...t,
-        url: signed?.[i]?.signedUrl ?? "",
-      }));
-
-      onOptimisticAdd(thumbWithUrl);
-
-      setMessage({ message: "Upload complete", type: "success" });
-      handlers.onUploadComplete?.();
-    } catch (err: any) {
-      console.error(err);
-      setMessage({
-        message: "Upload error: " + (err?.message ?? String(err)),
-        type: "error",
-      });
-    } finally {
-      setUploading(false);
+  // 3. Concurrency pool
+  const queue = [...entries];
+  const workers = Array.from({ length: CONCURRENCY }, async () => {
+    while (queue.length > 0) {
+      const entry = queue.shift();
+      if (entry) await processEntry(entry);
     }
-  };
+  });
+
+  await Promise.all(workers);
+
+  const dbRes = await fetch("/api/bulk-insert", {
+    method: "POST",
+    body: JSON.stringify({
+      datasetId,
+      storagePaths: uploadedPaths,
+    }),
+  }).then((r) => r.json());
+
+  if (!dbRes.success) {
+    setMessage({ type: "error", message: dbRes.error });
+    setProcessingZip(false);
+    setUploading(false);
+    return;
+  }
+
+  // 4. Fetch signed URLs
+  const { data: signed } = await supabase.storage
+    .from("datasets")
+    .createSignedUrls(uploadedPaths, 3600);
+
+  const finalThumbs: ImageThumbnail[] = uploadedPaths.map((path, i) => ({
+    id: dbRes.insertedIds[i], // returned from bulk insert
+    storage_path: path,
+    url: signed?.[i]?.signedUrl ?? "",
+  }));
+
+  // Add to UI
+  onOptimisticAdd(finalThumbs);
+
+  setProcessingZip(false);
+  setUploading(false);
+  setMessage({ type: "success", message: "Upload complete" });
+}
 
   return {
     uploading,
