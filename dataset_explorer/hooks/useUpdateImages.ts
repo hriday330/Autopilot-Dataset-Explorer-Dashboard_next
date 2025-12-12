@@ -85,6 +85,7 @@ async function handleUploadFiles(
   const totalFiles = entries.length;
 
   const uploadedPaths: string[] = [];
+  const failedUploads: { name: string; blob: Blob; reason?: string }[] = [];
 
   const processEntry = createProcessEntry({
     datasetId,
@@ -93,6 +94,9 @@ async function handleUploadFiles(
     totalFiles,
     onFileUploaded: (paths) => {
       uploadedPaths.push(...paths);
+    },
+    onFileFailed: (entry) => {
+      failedUploads.push(entry);
     },
     updateProgress: setUploadProgress,
   });
@@ -142,7 +146,7 @@ async function handleUploadFiles(
   options?.onUploadComplete?.();
   setProcessingZip(false);
   setUploading(false);
-  setMessage({ type: "success", message: "Upload complete" });
+  setMessage({ type: "success", message: `${uploadedPaths.length} images uploaded` });
 }
 
   return {
