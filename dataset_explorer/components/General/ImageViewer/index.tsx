@@ -71,18 +71,12 @@ export function ImageViewer({
     isValidFrame,
   } = useSelectFrame(frameNumber, totalFrames, onGoToFrame);
 
-  
   useEffect(() => {
     // Sync displayed number when frame changes externally
     setFrameInput(frameNumber.toString());
   }, [frameNumber]);
 
-  useAutoplayFrames(
-    isPlaying,
-    500, 
-    onNextFrame,
-    setDrawingDisabled,
-  );
+  useAutoplayFrames(isPlaying, 500, onNextFrame, setDrawingDisabled);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4">
