@@ -10,11 +10,12 @@ import { createProcessEntry } from "@lib/processEntry";
 interface ImageOperationsHandlers {
   onDeleteComplete?: () => void;
   onUploadComplete?: () => void;
+  pageSize?: number;
 }
 
 const CONCURRENCY = 8;
 
-export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
+export function useUpdateImages(options: ImageOperationsHandlers = {}) {
   const [uploading, setUploading] = useState(false);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [message, setMessage] = useState<OperationMessage>(null);
@@ -52,7 +53,7 @@ export function useUpdateImages(handlers: ImageOperationsHandlers = {}) {
         // Remove them from UI now
         onOptimisticDelete();
 
-        handlers.onDeleteComplete?.();
+        options.onDeleteComplete?.();
       }
 
       // Remove all deleted IDs from the deleting state
@@ -124,20 +125,24 @@ async function handleUploadFiles(
     return;
   }
 
-  // 4. Fetch signed URLs
+  const pageSize = options.pageSize ?? 12;
+  const firstPagePaths = uploadedPaths.slice(0, pageSize);
+  const firstPageIds = dbRes.insertedIds.slice(0, pageSize);
+
+  // sign first page
   const { data: signed } = await supabase.storage
     .from("datasets")
-    .createSignedUrls(uploadedPaths, 3600);
+    .createSignedUrls(firstPagePaths, 3600);
 
-  const finalThumbs: ImageThumbnail[] = uploadedPaths.map((path, i) => ({
-    id: dbRes.insertedIds[i], // returned from bulk insert
+  const firstPageThumbs: ImageThumbnail[] = firstPagePaths.map((path, i) => ({
+    id: firstPageIds[i],
     storage_path: path,
     url: signed?.[i]?.signedUrl ?? "",
   }));
 
-  // Add to UI
-  onOptimisticAdd(finalThumbs);
+  onOptimisticAdd(firstPageThumbs);
 
+  options?.onUploadComplete?.();
   setProcessingZip(false);
   setUploading(false);
   setMessage({ type: "success", message: "Upload complete" });
