@@ -16,7 +16,6 @@ export async function POST(req: Request) {
 
     const insertedIds: string[] = [];
 
-    // Insert in batches to avoid DB size limits
     for (let i = 0; i < storagePaths.length; i += BATCH_SIZE) {
       const batch = storagePaths.slice(i, i + BATCH_SIZE).map((path) => ({
         dataset_id: datasetId,
@@ -26,7 +25,7 @@ export async function POST(req: Request) {
       const { data, error } = await supabaseServer
         .from("images")
         .insert(batch)
-        .select("id"); // return primary keys
+        .select("id"); 
 
       if (error) {
         console.error("Bulk insert error:", error);

@@ -13,7 +13,7 @@ interface ImageOperationsHandlers {
   pageSize?: number;
 }
 
-const CONCURRENCY = 8;
+const CONCURRENCY = 24;
 
 export function useUpdateImages(options: ImageOperationsHandlers = {}) {
   const [uploading, setUploading] = useState(false);
@@ -28,12 +28,12 @@ export function useUpdateImages(options: ImageOperationsHandlers = {}) {
     storagePaths: string[],
     onOptimisticDelete: () => void,
   ) => {
-    // Mark all as deleting
+    
     setDeletingIds((prev) => [...prev, ...imageIds]);
     setMessage(null);
 
     startTransition(async () => {
-      // Bulk delete — both arrays must match in length + order!
+      
       const result = await deleteImagesAction(imageIds, storagePaths);
 
       if (result.error) {
@@ -50,13 +50,13 @@ export function useUpdateImages(options: ImageOperationsHandlers = {}) {
           type: "success",
         });
 
-        // Remove them from UI now
+        
         onOptimisticDelete();
 
         options.onDeleteComplete?.();
       }
 
-      // Remove all deleted IDs from the deleting state
+      
       setDeletingIds((prev) => prev.filter((id) => !imageIds.includes(id)));
     });
   };
@@ -74,20 +74,18 @@ async function handleUploadFiles(
   const isZip = file.name.toLowerCase().endsWith(".zip");
 
   if (!isZip) {
-    // Let your existing single-file code handle this
     return;
   }
 
   setUploading(true);
   setProcessingZip(true);
 
-  // 1. Unzip
+  
   const entries = await extractImagesFromZip(file);
   const totalFiles = entries.length;
 
   const uploadedPaths: string[] = [];
 
-  // 2. Create processEntry
   const processEntry = createProcessEntry({
     datasetId,
     datasetName,
@@ -99,7 +97,6 @@ async function handleUploadFiles(
     updateProgress: setUploadProgress,
   });
 
-  // 3. Concurrency pool
   const queue = [...entries];
   const workers = Array.from({ length: CONCURRENCY }, async () => {
     while (queue.length > 0) {

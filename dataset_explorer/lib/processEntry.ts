@@ -1,8 +1,5 @@
-// processEntry.ts
-
 import { supabase } from "./supabaseClient";
-import { uploadWithProgress } from "./uploadWithProgress";
-import type { ImageThumbnail } from "@lib/types";
+
 
 export function createProcessEntry({
   datasetId,
@@ -27,7 +24,6 @@ export function createProcessEntry({
     const filename = name.split("/").pop()!;
     const storagePath = `${userId}/${datasetName}/${filename}`;
 
-    // Upload directly to Supabase Storage
     const { error } = await supabase.storage
       .from("datasets")
       .upload(storagePath, blob, { upsert: true });
@@ -36,7 +32,6 @@ export function createProcessEntry({
       throw new Error(error.message);
     }
 
-    // Pass only storage path
     onFileUploaded([storagePath]);
 
     // Progress update
