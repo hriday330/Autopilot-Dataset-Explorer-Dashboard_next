@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     if (!datasetId || !Array.isArray(storagePaths)) {
       return NextResponse.json(
         { success: false, error: "Invalid payload" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,17 +25,17 @@ export async function POST(req: Request) {
       const { data, error } = await supabaseServer
         .from("images")
         .insert(batch)
-        .select("id"); 
+        .select("id");
 
       if (error) {
         console.error("Bulk insert error:", error);
         return NextResponse.json(
           { success: false, error: error.message },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
-      insertedIds.push(...data.map((d:any) => d.id));
+      insertedIds.push(...data.map((d: any) => d.id));
     }
 
     return NextResponse.json({
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         success: false,
         error: err?.message || "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

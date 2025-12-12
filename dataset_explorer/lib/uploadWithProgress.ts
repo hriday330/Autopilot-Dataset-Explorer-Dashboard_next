@@ -11,7 +11,6 @@ export async function uploadWithProgress({
   userId: string;
   onProgress?: (percent: number) => void;
 }) {
-  
   const { uploadUrl, storagePath } = await fetch("/api/upload-url", {
     method: "POST",
     body: JSON.stringify({
@@ -45,7 +44,7 @@ export async function uploadWithProgress({
     body: JSON.stringify({
       datasetId,
       storagePath,
-      isZip: false, // TODO: remove this server-side 
+      isZip: false, // TODO: remove this server-side
     }),
   }).then((r) => r.json());
 

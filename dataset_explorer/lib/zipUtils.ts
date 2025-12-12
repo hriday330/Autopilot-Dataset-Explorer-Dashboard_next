@@ -15,12 +15,12 @@ export async function extractImagesFromZip(file: File) {
       !lower.endsWith(".jpeg") &&
       !lower.endsWith(".png") &&
       !lower.endsWith(".webp")
-    ) continue;
+    )
+      continue;
 
-    const mime =
-      lower.endsWith(".png")
-        ? "image/png"
-        : lower.endsWith(".webp")
+    const mime = lower.endsWith(".png")
+      ? "image/png"
+      : lower.endsWith(".webp")
         ? "image/webp"
         : "image/jpeg";
 

@@ -1,6 +1,5 @@
 import { supabase } from "./supabaseClient";
 
-
 export function createProcessEntry({
   datasetId,
   datasetName,
@@ -17,7 +16,7 @@ export function createProcessEntry({
   userId: string;
   totalFiles: number;
   onFileUploaded: (paths: string[]) => void;
-  onFileFailed: (entry: { name: string; blob: Blob, reason?: string }) => void;
+  onFileFailed: (entry: { name: string; blob: Blob; reason?: string }) => void;
   updateProgress: (percent: number) => void;
   maxRetries?: number;
   retryDelay?: number;
@@ -30,7 +29,7 @@ export function createProcessEntry({
     while (attempts < maxRetries) {
       const { error } = await supabase.storage
         .from("datasets")
-        .upload(storagePath, blob,  { upsert: true});
+        .upload(storagePath, blob, { upsert: true });
 
       if (!error) {
         return true;
@@ -40,7 +39,7 @@ export function createProcessEntry({
 
       // progressive delay
       await new Promise((res) =>
-        setTimeout(res, retryDelay * Math.pow(2, attempts - 1))
+        setTimeout(res, retryDelay * Math.pow(2, attempts - 1)),
       );
     }
 
@@ -55,7 +54,7 @@ export function createProcessEntry({
     const success = await uploadWithRetry(storagePath, blob);
 
     if (!success) {
-      onFileFailed({...entry, reason: "Upload failed after retries"}); // collect failed uploads for reporting or retrying
+      onFileFailed({ ...entry, reason: "Upload failed after retries" }); // collect failed uploads for reporting or retrying
     } else {
       onFileUploaded([storagePath]);
     }
