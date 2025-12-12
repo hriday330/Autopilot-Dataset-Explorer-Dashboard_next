@@ -30,7 +30,7 @@ export function createProcessEntry({
     while (attempts < maxRetries) {
       const { error } = await supabase.storage
         .from("datasets")
-        .upload(storagePath, blob);
+        .upload(storagePath, blob,  { upsert: true});
 
       if (!error) {
         return true;
