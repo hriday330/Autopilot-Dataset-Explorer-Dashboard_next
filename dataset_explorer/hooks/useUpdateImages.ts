@@ -68,15 +68,19 @@ export function useUpdateImages(options: ImageOperationsHandlers = {}) {
 
     const file = files[0];
     const isZip = file.name.toLowerCase().endsWith(".zip");
-
+    let entries; 
     if (!isZip) {
-      return;
+      entries = [
+      {
+        name: file.name,
+        blob: file,
+      },
+    ];
+    } else { 
+      entries = await extractImagesFromZip(file);
+      setProcessingZip(true);
     }
-
     setUploading(true);
-    setProcessingZip(true);
-
-    const entries = await extractImagesFromZip(file);
     const totalFiles = entries.length;
 
     const uploadedPaths: string[] = [];
